@@ -1,0 +1,3 @@
+﻿  glad.c
+glfw3.lib(context.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(context.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
+  bengine.vcxproj -> C:\Users\thebi\source\repos\bengine\x64\Debug\bengine.exe
