@@ -23,8 +23,12 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="triangle.frag" />
-    <None Include="triangle.vert" />
+    <None Include="firstShader.frag" />
+    <None Include="firstShader.vert" />
+    <None Include="tempFirstShader.frag" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="shader.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>

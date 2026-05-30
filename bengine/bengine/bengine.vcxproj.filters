@@ -26,11 +26,19 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="triangle.vert">
+    <None Include="firstShader.vert">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="triangle.frag">
+    <None Include="firstShader.frag">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="tempFirstShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
