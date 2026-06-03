@@ -19,16 +19,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="glad.c" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="main\glad.c" />
+    <ClCompile Include="main\imageLoading.cpp" />
+    <ClCompile Include="main\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="firstShader.frag" />
-    <None Include="firstShader.vert" />
-    <None Include="tempFirstShader.frag" />
+    <None Include="shaders\firstShader.frag" />
+    <None Include="shaders\firstShader.vert" />
+    <None Include="shaders\tempFirstShader.frag" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="shader.h" />
+    <ClInclude Include="headers\my_texture.h" />
+    <ClInclude Include="headers\shader.h" />
+    <ClInclude Include="headers\stb_image.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
@@ -121,12 +124,16 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)headers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>signtool sign /f "C:\TestCert.pfx" /p "BATTAK" /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 "C:\Users\thebi\source\repos\bengine\x64\Debug\bengine.exe"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
