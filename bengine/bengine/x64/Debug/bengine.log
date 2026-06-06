@@ -1,5 +1,5 @@
 ﻿  main.cpp
-C:\Users\thebi\source\repos\bengine\bengine\headers\shader.h(111,55): warning C4244: 'argument': conversion from 'float' to 'GLint', possible loss of data
+C:\Users\thebi\source\repos\bengine\bengine\headers\shader.h(120,55): warning C4244: 'argument': conversion from 'float' to 'GLint', possible loss of data
   (compiling source file 'main/main.cpp')
   
 C:\Users\thebi\source\repos\bengine\bengine\headers\my_texture.h(41,34): warning C4553: '==': result of expression not used; did you intend '='?
@@ -11,30 +11,70 @@ C:\Users\thebi\source\repos\bengine\bengine\headers\my_texture.h(42,39): warning
 C:\Users\thebi\source\repos\bengine\bengine\headers\my_texture.h(43,39): warning C4553: '==': result of expression not used; did you intend '='?
   (compiling source file 'main/main.cpp')
   
-  LINK : C:\Users\thebi\source\repos\bengine\x64\Debug\bengine.exe not found or not built by the last incremental link; performing full link
-glfw3.lib(init.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(init.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(window.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(window.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(input.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(input.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(context.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(context.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(win32_time.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(win32_time.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(win32_thread.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(win32_thread.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(platform.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(platform.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(monitor.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(monitor.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(vulkan.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(vulkan.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(win32_init.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(win32_init.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(null_init.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(null_init.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(win32_module.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(win32_module.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(win32_monitor.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(win32_monitor.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(win32_window.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(win32_window.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(win32_joystick.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(win32_joystick.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(wgl_context.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(wgl_context.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(egl_context.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(egl_context.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(osmesa_context.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(osmesa_context.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(null_monitor.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(null_monitor.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(null_window.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(null_window.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-glfw3.lib(null_joystick.obj) : warning LNK4099: PDB 'glfw3.pdb' was not found with 'glfw3.lib(null_joystick.obj)' or at 'C:\Users\thebi\source\repos\bengine\x64\Debug\glfw3.pdb'; linking object as if no debug info
-     Creating library C:\Users\thebi\source\repos\bengine\x64\Debug\bengine.lib and object C:\Users\thebi\source\repos\bengine\x64\Debug\bengine.exp
-  bengine.vcxproj -> C:\Users\thebi\source\repos\bengine\x64\Debug\bengine.exe
-  Done Adding Additional Store
-  Successfully signed: C:\Users\thebi\source\repos\bengine\x64\Debug\bengine.exe
+C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(13,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'main/main.cpp')
   
+C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(14,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'main/main.cpp')
+  
+C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(19,16): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'main/main.cpp')
+  
+C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(20,16): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'main/main.cpp')
+  
+C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(21,10): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'main/main.cpp')
+  
+C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(22,10): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'main/main.cpp')
+  
+C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(41,2): error C2065: 'cameraFront': undeclared identifier
+  (compiling source file 'main/main.cpp')
+  
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(26,7): error C2374: 'pitch': redefinition; multiple initialization
+      C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(6,7):
+      see declaration of 'pitch'
+  
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(26,7): error C2086: 'float pitch': redefinition
+      C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(6,7):
+      see declaration of 'pitch'
+  
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(26,21): error C2374: 'yaw': redefinition; multiple initialization
+      C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(6,21):
+      see declaration of 'yaw'
+  
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(26,21): error C2086: 'float yaw': redefinition
+      C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(6,21):
+      see declaration of 'yaw'
+  
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(56,7): error C2374: 'lastX': redefinition; multiple initialization
+      C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(7,7):
+      see declaration of 'lastX'
+  
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(56,7): error C2086: 'float lastX': redefinition
+      C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(7,7):
+      see declaration of 'lastX'
+  
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(56,32): error C2374: 'lastY': redefinition; multiple initialization
+      C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(7,23):
+      see declaration of 'lastY'
+  
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(56,32): error C2086: 'float lastY': redefinition
+      C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(7,23):
+      see declaration of 'lastY'
+  
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(57,6): error C2374: 'firstMouse': redefinition; multiple initialization
+      C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(8,6):
+      see declaration of 'firstMouse'
+  
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(57,6): error C2086: 'bool firstMouse': redefinition
+      C:\Users\thebi\source\repos\bengine\bengine\headers\my_camera.h(8,6):
+      see declaration of 'firstMouse'
+  
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(62,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(63,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(68,16): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(69,16): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(70,10): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\thebi\source\repos\bengine\bengine\main\main.cpp(71,10): warning C4244: '=': conversion from 'double' to 'float', possible loss of data

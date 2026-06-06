@@ -2,10 +2,16 @@
 
 #include <glad/glad.h> //GET THOSE OPENGL HEADERS
 
+#include <glm/glm.hpp>
+//#include <glm/gtc/matrix_transform.hpp>
+//#include <glm/gtc/type_ptr.hpp>
+
+
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <iostream>
+
 
 class Shader
 {
@@ -113,5 +119,8 @@ public:
 	void setFloat(const std::string& name, float value)const {
 		glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
 	}
-	//Actually not sure why would I need these make sure to come back and check
+	void setMat4(const std::string& name, glm::mat4 value)const {
+		glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));  //uniform loc, no of matrices, no transpose, OpenGl friendly -> value_ptr(mat data)
+	}
+	//last one is my own for convenience
 };

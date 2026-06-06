@@ -29,6 +29,7 @@
     <None Include="shaders\tempFirstShader.frag" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\my_camera.h" />
     <ClInclude Include="headers\my_texture.h" />
     <ClInclude Include="headers\shader.h" />
     <ClInclude Include="headers\stb_image.h" />
