@@ -241,28 +241,33 @@ int main () {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	Shader lightingShader(R"(shaders\lightingShader.vert)", R"(shaders\lightingShader.frag)");
-	lightingShader.use();
-	lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-	lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-	
-
 	//***********************************************************************************************
+	Shader lightingShader(R"(shaders\lightingShader.vert)", R"(shaders\lightingShader.frag)");
+
+	lightingShader.use();
+	
+	//setting the material and light (temp?)
+	//lightingShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+	lightingShader.setInt("material.diffuse", 0);
+	lightingShader.setInt("material.specular", 1);
+	lightingShader.setFloat("material.shininess", 32.0f);
+
+	lightingShader.setVec3("light.ambient", 0.2f);
+	lightingShader.setVec3("light.diffuse", 0.5f);
+	lightingShader.setVec3("light.specular", 1.0f);
+	//***********************************************************************************************
+	Texture diffuseMap(GL_TEXTURE_2D, "textures/container2.png", true, 0);
+	diffuseMap.wrapMode(GL_REPEAT, GL_REPEAT, GL_REPEAT);
+	diffuseMap.filteringMode(GL_LINEAR, GL_LINEAR);
+
+	Texture specularMap(GL_TEXTURE_2D, "textures/container2_specular.png", true, 1);
+	specularMap.wrapMode(GL_REPEAT, GL_REPEAT, GL_REPEAT);
+	specularMap.filteringMode(GL_LINEAR, GL_LINEAR);
 
 	Shader lightSourceShader(R"(shaders\lightSourceShader.vert)", R"(shaders\lightSourceShader.frag)");
-
-	Texture texture1(GL_TEXTURE_2D, "textures/container.jpg", false, 0);
-	texture1.wrapMode(GL_REPEAT, GL_REPEAT, GL_REPEAT);
-	texture1.filteringMode(GL_LINEAR, GL_LINEAR);
-
-	Texture texture2(GL_TEXTURE_2D,"textures/awesomeface.png",true, 1);
-	texture2.wrapMode(GL_REPEAT, GL_REPEAT, GL_REPEAT);
-	texture2.filteringMode(GL_LINEAR,GL_LINEAR);
-
-	lightingShader.use();
-	lightingShader.setInt("texture1", 0);
-	lightingShader.setInt("texture2", 1);
 	//***********************************************************************************************
+
+
 
 
 	//unbind all the stuff
@@ -299,7 +304,7 @@ int main () {
 		lightPos = glm::vec3(sin((float) glfwGetTime()), cos((float) glfwGetTime()), 0.0f);
 
 		lightingShader.use();
-		lightingShader.setVec3("lightPos", lightPos);
+		lightingShader.setVec3("light.position", lightPos);
 		lightingShader.setVec3("viewPos", camera.Position);
 		lightingShader.setMat4("view", view);
 		lightingShader.setMat4("projection", projection);

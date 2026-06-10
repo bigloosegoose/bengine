@@ -38,9 +38,9 @@ public:
 		if (data) {
 			GLenum format = GL_RGB;
 
-			if (nrChannels == 1) { format == GL_RED; glPixelStorei(GL_UNPACK_ALIGNMENT, 1); }
-			else if (nrChannels == 3) { format == GL_RGB; glPixelStorei(GL_UNPACK_ALIGNMENT, 1); }
-			else if (nrChannels == 4) { format == GL_RGBA; glPixelStorei(GL_UNPACK_ALIGNMENT, 4); }
+			if (nrChannels == 1) { format = GL_RED; glPixelStorei(GL_UNPACK_ALIGNMENT, 1); }
+			else if (nrChannels == 3) { format = GL_RGB; glPixelStorei(GL_UNPACK_ALIGNMENT, 1); }
+			else if (nrChannels == 4) { format = GL_RGBA; glPixelStorei(GL_UNPACK_ALIGNMENT, 4); }
 
 			if (texType == GL_TEXTURE_2D) {
 				glTexImage2D(texType, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
