@@ -4,30 +4,33 @@
 #include "stb_image.h"
 #include <iostream>
 
+
 //a bad but proud texture class made by battak for loading textures easily
 
-class Texture {
+class MTexture {
 public:
 	//texture id?
 	unsigned int ID;
-	GLenum globalTexType;
+	GLenum globalTexType = GL_TEXTURE_2D;
+	std::string type;
 
-	Texture(GLenum texType, const char* imagePath, bool verticallyFlip, GLenum texUnit) {
+
+
+	MTexture(GLenum GLtexType, const char* imagePath, bool verticallyFlip, GLenum texUnit) {
 		
-		globalTexType = texType;
 
 
 		//create the texture
 		glGenTextures(1, &ID);
 		glActiveTexture(GL_TEXTURE0 + texUnit);
-		glBindTexture(texType, ID);
+		glBindTexture(GLtexType, ID);
 
 		//initializing
-		glTexParameteri(texType, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(texType, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(texType, GL_TEXTURE_WRAP_R, 0);
-		glTexParameteri(texType, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(texType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GLtexType, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GLtexType, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GLtexType, GL_TEXTURE_WRAP_R, 0);
+		glTexParameteri(GLtexType, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GLtexType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		stbi_set_flip_vertically_on_load(verticallyFlip);
 
@@ -42,12 +45,12 @@ public:
 			else if (nrChannels == 3) { format = GL_RGB; glPixelStorei(GL_UNPACK_ALIGNMENT, 1); }
 			else if (nrChannels == 4) { format = GL_RGBA; glPixelStorei(GL_UNPACK_ALIGNMENT, 4); }
 
-			if (texType == GL_TEXTURE_2D) {
-				glTexImage2D(texType, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-				glGenerateMipmap(texType);
+			if (GLtexType == GL_TEXTURE_2D) {
+				glTexImage2D(GLtexType, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+				glGenerateMipmap(GLtexType);
 			}
 			else {
-				std::cout << "Texture Type(" << texType << ") currently unspported in my_texture.h" << std::endl;
+				std::cout << "Texture Type(" << GLtexType << ") currently unspported in my_texture.h" << std::endl;
 			}
 
 
@@ -56,6 +59,8 @@ public:
 			std::cout << "failed to load the texture image!" << std::endl;
 		}
 	}
+
+
 
 
 	void wrapMode(GLenum texWrapModeS, GLenum texWrapModeT, GLenum texWrapModeR) {

@@ -41,6 +41,12 @@
     <None Include="shaders\lightSourceShader.frag">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="shaders\temp.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\temp.vert">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\shader.h">
@@ -53,6 +59,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

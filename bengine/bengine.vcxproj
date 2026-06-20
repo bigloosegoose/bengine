@@ -28,10 +28,14 @@
     <None Include="shaders\lightingShader.vert" />
     <None Include="shaders\lightingShader.frag" />
     <None Include="shaders\lightSourceShader.frag" />
+    <None Include="shaders\temp.frag" />
+    <None Include="shaders\temp.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\camera.h" />
+    <ClInclude Include="headers\model.h" />
     <ClInclude Include="headers\my_texture.h" />
+    <ClInclude Include="headers\scene.h" />
     <ClInclude Include="headers\shader.h" />
     <ClInclude Include="headers\stb_image.h" />
   </ItemGroup>
@@ -131,7 +135,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;opengl32.lib;assimp-vc145-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>signtool sign /f "C:\TestCert.pfx" /p "BATTAK" /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 "C:\Users\thebi\source\repos\bengine\x64\Debug\bengine.exe"</Command>
