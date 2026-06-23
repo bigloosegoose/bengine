@@ -1,0 +1,71 @@
+#version 430 core
+
+// Generates the initial frequency-domain spectrum H0(k) for one ocean cascade.
+// Uses the Tessendorf/Phillips spectrum (robust classic). Stores H0(k) in .xy
+// and conj(H0(-k)) in .zw so the time-evolution pass can synthesise h~(k,t).
+
+layout(local_size_x = 16, local_size_y = 16) in;
+layout(rgba32f, binding = 0) uniform writeonly image2D h0Tex;
+
+uniform int   N;          // texture resolution (power of two)
+uniform float L;          // patch size in metres
+uniform vec2  windDir;    // normalized wind direction
+uniform float windSpeed;  // wind speed (m/s)
+uniform float amplitude;  // overall spectrum amplitude
+uniform float suppress;   // small-wave suppression length
+uniform uint  seed;
+
+const float PI = 3.14159265358979;
+const float G  = 9.81;
+
+uint hashU(uint x) {
+	x ^= x >> 16; x *= 0x7feb352dU;
+	x ^= x >> 15; x *= 0x846ca68bU;
+	x ^= x >> 16;
+	return x;
+}
+float rnd(inout uint state) {
+	state = hashU(state);
+	return float(state) * (1.0 / 4294967296.0);
+}
+// pair of independent standard gaussians (Box-Muller)
+vec2 gaussian(inout uint state) {
+	float u1 = max(rnd(state), 1e-6);
+	float u2 = rnd(state);
+	float r  = sqrt(-2.0 * log(u1));
+	float a  = 2.0 * PI * u2;
+	return vec2(r * cos(a), r * sin(a));
+}
+
+float phillips(vec2 k) {
+	float kLen = length(k);
+	if (kLen < 1e-6) return 0.0;
+	float kLen2 = kLen * kLen;
+	float Lwind = windSpeed * windSpeed / G;          // largest wave from wind
+	float kdotw = dot(normalize(k), windDir);
+	float ph = amplitude * exp(-1.0 / (kLen2 * Lwind * Lwind)) / (kLen2 * kLen2);
+	ph *= kdotw * kdotw;                              // directional term
+	ph *= exp(-kLen2 * suppress * suppress);          // suppress tiny waves
+	return ph;
+}
+
+vec2 h0(vec2 k, inout uint state) {
+	vec2 xi = gaussian(state);
+	return xi * sqrt(phillips(k) * 0.5);
+}
+
+void main() {
+	ivec2 id = ivec2(gl_GlobalInvocationID.xy);
+	if (id.x >= N || id.y >= N) return;
+
+	float n = float(id.x) - float(N) / 2.0;
+	float m = float(id.y) - float(N) / 2.0;
+	vec2 k = vec2(2.0 * PI * n / L, 2.0 * PI * m / L);
+
+	uint state = (uint(id.x) * 1973u + uint(id.y) * 9277u + seed * 26699u) | 1u;
+	vec2 h0k  = h0( k, state);
+	vec2 h0mk = h0(-k, state);
+
+	// store H0(k).xy and conj(H0(-k)).zw
+	imageStore(h0Tex, id, vec4(h0k, h0mk.x, -h0mk.y));
+}

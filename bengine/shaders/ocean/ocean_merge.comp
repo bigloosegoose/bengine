@@ -1,0 +1,57 @@
+#version 430 core
+
+// Final assembly pass for one cascade. Applies the (-1)^(x+y) sign correction and
+// 1/N^2 normalisation to the IFFT output, writes the spatial displacement map, and
+// derives normals + Jacobian foam from finite differences of neighbouring texels.
+
+layout(local_size_x = 16, local_size_y = 16) in;
+layout(rgba32f, binding = 0) uniform readonly  image2D fft0; // height(.x) + Dx(.z)
+layout(rgba32f, binding = 1) uniform readonly  image2D fft1; // Dz(.x)
+layout(rgba32f, binding = 2) uniform writeonly image2D displacementTex; // (Dx,Dy,Dz,0)
+layout(rgba32f, binding = 3) uniform writeonly image2D normalFoamTex;   // (n.xyz, foam)
+
+uniform int   N;
+uniform float L;
+uniform float choppiness;  // lambda: horizontal displacement strength
+uniform float dispScale;   // overall displacement scale
+uniform float foamBias;
+uniform float foamScale;
+
+int wrapN(int v) { return v & (N - 1); } // N is a power of two
+
+vec3 getDisp(ivec2 id) {
+	float sgn   = ((id.x + id.y) & 1) == 0 ? 1.0 : -1.0;
+	float invN2 = 1.0 / float(N * N);
+	float Dy = imageLoad(fft0, id).x * sgn * invN2;
+	float Dx = imageLoad(fft0, id).z * sgn * invN2;
+	float Dz = imageLoad(fft1, id).x * sgn * invN2;
+	return vec3(Dx * choppiness, Dy, Dz * choppiness) * dispScale;
+}
+
+void main() {
+	ivec2 id = ivec2(gl_GlobalInvocationID.xy);
+	if (id.x >= N || id.y >= N) return;
+
+	vec3 disp = getDisp(id);
+	imageStore(displacementTex, id, vec4(disp, 0.0));
+
+	float texel = L / float(N);
+	vec3 dxL = getDisp(ivec2(wrapN(id.x - 1), id.y));
+	vec3 dxR = getDisp(ivec2(wrapN(id.x + 1), id.y));
+	vec3 dzD = getDisp(ivec2(id.x, wrapN(id.y - 1)));
+	vec3 dzU = getDisp(ivec2(id.x, wrapN(id.y + 1)));
+
+	vec3 ddx = (dxR - dxL) / (2.0 * texel);
+	vec3 ddz = (dzU - dzD) / (2.0 * texel);
+
+	vec3 normal = normalize(vec3(-ddx.y, 1.0, -ddz.y));
+
+	// Jacobian of horizontal displacement -> foam where the surface folds (J < 0)
+	float Jxx = 1.0 + ddx.x;
+	float Jzz = 1.0 + ddz.z;
+	float Jxz = ddx.z;
+	float jacobian = Jxx * Jzz - Jxz * Jxz;
+	float foam = clamp((foamBias - jacobian) * foamScale, 0.0, 1.0);
+
+	imageStore(normalFoamTex, id, vec4(normal, foam));
+}

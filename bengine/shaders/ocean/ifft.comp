@@ -1,0 +1,39 @@
+#version 430 core
+
+// One butterfly stage of a 2D inverse FFT, ping-ponged by the host.
+// Processes two complex fields at once (.xy and .zw) since the butterfly is
+// linear and per-element. direction = 0 runs along rows, 1 runs along columns.
+
+layout(local_size_x = 16, local_size_y = 16) in;
+layout(rgba32f, binding = 0) uniform readonly  image2D butterfly;
+layout(rgba32f, binding = 1) uniform readonly  image2D srcTex;
+layout(rgba32f, binding = 2) uniform writeonly image2D dstTex;
+
+uniform int stage;
+uniform int direction; // 0 = horizontal, 1 = vertical
+
+vec2 cmul(vec2 a, vec2 b) {
+	return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+}
+
+void main() {
+	ivec2 id = ivec2(gl_GlobalInvocationID.xy);
+
+	vec4 bf;
+	vec4 p, q;
+	if (direction == 0) {
+		bf = imageLoad(butterfly, ivec2(stage, id.x));
+		p  = imageLoad(srcTex, ivec2(int(bf.z), id.y));
+		q  = imageLoad(srcTex, ivec2(int(bf.w), id.y));
+	} else {
+		bf = imageLoad(butterfly, ivec2(stage, id.y));
+		p  = imageLoad(srcTex, ivec2(id.x, int(bf.z)));
+		q  = imageLoad(srcTex, ivec2(id.x, int(bf.w)));
+	}
+	vec2 w = bf.xy;
+
+	// H = p + w * q   for both complex fields
+	vec2 H0 = p.xy + cmul(w, q.xy);
+	vec2 H1 = p.zw + cmul(w, q.zw);
+	imageStore(dstTex, id, vec4(H0, H1));
+}
