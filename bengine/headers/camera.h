@@ -22,7 +22,8 @@ enum Camera_Movement {
 
 enum Camera_Mode {
 	FPS,
-	FLY
+	FLY,
+	BTK
 };
 
 
@@ -120,21 +121,38 @@ public:
 			//if (direction == DOWN)
 				//Position -= Up * velocity;
 		}
+
 	}		
 
-	void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true) {
+	void ProcessMouseMovement(float xoffset, float yoffset, float deltaTime ,GLboolean constrainPitch = true) {
 		
-		xoffset *= MouseSensitivity;
-		yoffset *= MouseSensitivity;
+		if (Mode != BTK) 
+		{
+			xoffset *= MouseSensitivity;
+			yoffset *= MouseSensitivity;
 
-		Yaw += xoffset;
-		Pitch += yoffset;
+			Yaw += xoffset;
+			Pitch += yoffset;
 
-		if (constrainPitch == true) {
-			if (Pitch > 89.0f)  Pitch =  89.0f;
-			if (Pitch < -89.0f) Pitch = -89.0f;
+			if (constrainPitch == true) {
+				if (Pitch > 89.0f)  Pitch = 89.0f;
+				if (Pitch < -89.0f) Pitch = -89.0f;
+			}
+			updateCameraVectors();
 		}
-		updateCameraVectors();
+
+		else if (Mode == BTK)
+		{
+			xoffset *= MouseSensitivity;
+			yoffset *= MouseSensitivity;
+
+			Yaw += xoffset;
+			Pitch = 0.0f;
+			updateCameraVectors();
+
+			float velocity = MovementSpeed * deltaTime;
+			Position += Front * velocity * yoffset;
+		}
 	}
 	
 	void ProcessMouseScroll(float yoffset) {

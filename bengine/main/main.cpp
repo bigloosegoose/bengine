@@ -35,6 +35,8 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
+void outlineModel(Model model, Shader defShader, glm::vec3 position);
+
 
 float vertices[] = {
 	// positions		  //normals          // texture coords
@@ -81,12 +83,22 @@ float vertices[] = {
 	-0.5f,  0.5f,  0.5f, 0.0f,   1.0f,  0.0f, 0.0f, 0.0f
 };
 
+float vertices2[] = {
+	-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+	 0.5f, -0.5f, 0.0f,  0.0f, 0.0f, -1.0f, 1.0f, 0.0f,
+	 0.5f,  0.5f, 0.0f,  0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
+	 0.5f,  0.5f, 0.0f,  0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
+	-0.5f,  0.5f, 0.0f,  0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
+	-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+};
+
 glm::vec3 pointLightPositions[] = {
 	glm::vec3(0.7f, 0.2f,  2.0f),
 	glm::vec3(2.3f, -3.3f, -4.0f),
 	glm::vec3(-4.0f, 2.0f, -12.0f),
 	glm::vec3(0.0f, 0.0f, -3.0f)
 };
+
 
 //****************************************************************************************************************************************
 int main () {
@@ -124,6 +136,7 @@ int main () {
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_STENCIL_TEST);
 
 
 
@@ -150,19 +163,6 @@ int main () {
 
 
 	//***********************************************************************************************
-	//The light source ;-; (clean the code further)
-
-	unsigned int lightVAO;
-	glGenVertexArrays(1, &lightVAO); //we not making lightVBO cuz we using the one from the container
-	
-	glBindVertexArray(lightVAO);
-	glBindBuffer(GL_ARRAY_BUFFER,VBO);
-
-	//VertexPos Attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	//***********************************************************************************************
 	Shader lightingShader(R"(shaders\lightingShader.vert)", R"(shaders\lightingShader.frag)");
 
 	lightingShader.use();
@@ -172,24 +172,51 @@ int main () {
 
 	
 	//***********************************************************************************************
-	MTexture diffuseMap(GL_TEXTURE_2D, "textures/container2.png", true, 0);
-	diffuseMap.wrapMode(GL_REPEAT, GL_REPEAT, GL_REPEAT);
-	diffuseMap.filteringMode(GL_LINEAR, GL_LINEAR);
+	//MTexture diffuseMap(GL_TEXTURE_2D, "textures/container2.png", true, 0);
 
-	MTexture specularMap(GL_TEXTURE_2D, "textures/container2_specular.png", true, 1);
-	specularMap.wrapMode(GL_REPEAT, GL_REPEAT, GL_REPEAT);
-	specularMap.filteringMode(GL_LINEAR, GL_LINEAR);
+	//MTexture specularMap(GL_TEXTURE_2D, "textures/container2_specular.png", true, 1);
+
+	//GRASS
+	unsigned int grassVAO, grassVBO;
+	glGenVertexArrays(1, &grassVAO);
+	glGenBuffers(1, &grassVBO);
+	glBindVertexArray(grassVAO);
+
+	
+
+	glBindBuffer(GL_ARRAY_BUFFER, grassVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
+
+	//VertexPos Attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	//normal attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	//texture attribute
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	vector<glm::vec3> grassPositions;
+	grassPositions.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
+	grassPositions.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
+	grassPositions.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
+	grassPositions.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
+	grassPositions.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
+
+	Shader tempGrassShader(R"(shaders/lightingShader.vert)", R"(shaders/temp.frag)");
+	
+
+	MTexture grassTex(GL_TEXTURE_2D, "textures/grass.png", true, 0);
+
+	tempGrassShader.use();
+	tempGrassShader.setInt("material.texture_diffuse1", grassTex.ID);
+	//***********************************************************************************************
 
 	Shader lightSourceShader(R"(shaders\lightSourceShader.vert)", R"(shaders\lightSourceShader.frag)");
-	//***********************************************************************************************
-	//LAB
-	glm::vec3 ambient = glm::vec3(0.2f);
-	glm::vec3 diffuse = glm::vec3(0.0f,0.9f,0.0f);
-	glm::vec3 specular = glm::vec3(1.0f, 1.0f, 1.0f);
-
 
 	//HELL
-		//***********************************************************************************************
+	//***********************************************************************************************
 	lightingShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
 	lightingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
 	lightingShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
@@ -281,45 +308,26 @@ int main () {
 		lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
 		lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
 
-		//outline step 1
-		glEnable(GL_STENCIL_TEST); // enable stencil testing
-		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE); // Replace with ref value if both tests pass
+		//backpack.Draw(lightingShader);
 
-		glStencilFunc(GL_ALWAYS, 1, 0xFF); //all fragments will pass the stencil test
-		glStencilMask(0xFF); // enable writing to the buffer
-		backpack.Draw(lightingShader);
+		//bad outline function testing
+		//outlineModel(backpack, lightingShader, glm::vec3(5.0f));
 
-		//outline step 2
-		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		glStencilMask(0x00); // disable writing to the buffer
-		glDisable(GL_DEPTH_TEST);
-		outlineShader.use();
-		model = glm::scale(model, glm::vec3(1.01f));
-		outlineShader.setVec3("viewPos", camera.Position);
-		outlineShader.setMat4("view", view);
-		outlineShader.setMat4("projection", projection);
-		outlineShader.setMat4("model", model);
-		backpack.Draw(outlineShader);
-		glEnable(GL_DEPTH_TEST);
-		glStencilMask(0xFF);
-
-		/*//drawing lights
-		for (unsigned int i = 0; i < 4; i++) {
-			//the light
+		//drawing random
+		tempGrassShader.use();
+		glBindVertexArray(grassVAO);
+		glBindTexture(GL_TEXTURE_2D, grassTex.ID);
+		for (unsigned int i = 0; i < grassPositions.size(); i++) {
+		
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, pointLightPositions[i]);
-			model = glm::scale(model, glm::vec3(0.2f));
+			model = glm::translate(model, grassPositions[i]);
+			tempGrassShader.setMat4("model", model);
+			tempGrassShader.setVec3("viewPos", camera.Position);
+			tempGrassShader.setMat4("view", view);
+			tempGrassShader.setMat4("projection", projection);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
 
-			lightSourceShader.use();
-			lightSourceShader.setVec3("lightColor", glm::vec3(1.0f));
-			lightSourceShader.setMat4("view", view);
-			lightSourceShader.setMat4("projection", projection);
-			lightSourceShader.setMat4("model", model);
-
-			glBindVertexArray(lightVAO);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-
-		}*/
+		}
 
 		
 
@@ -365,7 +373,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
 	lastX = xpos;
 	lastY = ypos;
 
-	camera.ProcessMouseMovement(xoffset, yoffset);
+	camera.ProcessMouseMovement(xoffset, yoffset, deltaTime);
 }
 
 void processInput(GLFWwindow* window) {
@@ -391,4 +399,43 @@ void processInput(GLFWwindow* window) {
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
+}
+
+//EWWW function
+void outlineModel(Model model, Shader defShader, glm::vec3 position) {
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_STENCIL_TEST);
+
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	glStencilMask(0xFF);
+	glStencilFunc(GL_ALWAYS,1,0xFF);
+	defShader.use();
+
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::translate(modelMat, position);
+	defShader.setMat4("model", modelMat);
+	model.Draw(defShader);
+
+	
+
+	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+	glStencilMask(0x00);
+	glEnable(GL_DEPTH_TEST);
+	glm::mat4 view = camera.GetViewMatrix();
+	glm::mat4 projection;
+	projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 100.0f);
+
+	Shader outlineShader(R"(shaders/lightingShader.vert)", R"(shaders/temp.frag)");
+
+	outlineShader.use();
+	modelMat = glm::scale(modelMat, glm::vec3(1.01f));
+	outlineShader.setVec3("viewPos", camera.Position);
+	outlineShader.setMat4("view", view);
+	outlineShader.setMat4("projection", projection);
+	outlineShader.setMat4("model", modelMat);
+
+	model.Draw(outlineShader);
+	glDisable(GL_DEPTH_TEST);
+	glStencilMask(0xFF);
+
 }

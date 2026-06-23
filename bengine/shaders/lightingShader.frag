@@ -66,6 +66,8 @@ in      vec2 TexCoords;
 out     vec4 FragColor;
 uniform vec3 viewPos;
 
+//********************************************************************************************************************
+
 void main() 
 {
 	//properties
@@ -87,17 +89,20 @@ void main()
 
 	//LABS
 	/* 
-	float depth = gl_FragCoord.z;
-	float z = depth * 2.0 - 1.0;
-	float linearDepth = (2.0 * near * far) / (far + near - z * (far - near));
-	FragColor = vec4(vec3(linearDepth/far), 1.0);
+	vec4 texColor = texture(material.texture_diffuse1, TexCoords);
+
+	if (texColor.a < 0.1 ){
+		discard;
+	}
 	*/
+
+
 
 	FragColor = vec4(result, 1.0);
 
 }
 
-
+//********************************************************************************************************************
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir){
 	vec3 lightDir = normalize(-light.direction);
 	//diffuse shading
