@@ -1,0 +1,53 @@
+#version 430 core
+
+// Evolves H0(k) in time to produce the frequency-domain fields that are inverse
+// FFT'd into spatial displacement. Two complex fields are packed per output
+// texture (the IFFT butterfly acts independently on .xy and .zw):
+//   packed0 = ( h~  | D~x )   -> height + x displacement
+//   packed1 = ( D~z |  0  )   -> z displacement
+
+layout(local_size_x = 16, local_size_y = 16) in;
+layout(rgba32f, binding = 0) uniform readonly  image2D h0Tex;
+layout(rgba32f, binding = 1) uniform writeonly image2D packed0;
+layout(rgba32f, binding = 2) uniform writeonly image2D packed1;
+
+uniform int   N;
+uniform float L;
+uniform float time;
+
+const float PI = 3.14159265358979;
+const float G  = 9.81;
+
+vec2 cmul(vec2 a, vec2 b) {
+	return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+}
+
+void main() {
+	ivec2 id = ivec2(gl_GlobalInvocationID.xy);
+	if (id.x >= N || id.y >= N) return;
+
+	float n = float(id.x) - float(N) / 2.0;
+	float m = float(id.y) - float(N) / 2.0;
+	vec2  k = vec2(2.0 * PI * n / L, 2.0 * PI * m / L);
+	float kLen = max(length(k), 1e-6);
+
+	float w  = sqrt(G * kLen);          // deep-water dispersion
+	float wt = w * time;
+	vec2  ePos = vec2(cos(wt),  sin(wt));
+	vec2  eNeg = vec2(cos(wt), -sin(wt));
+
+	vec4 h0data    = imageLoad(h0Tex, id);
+	vec2 h0k       = h0data.xy;
+	vec2 h0mkConj  = h0data.zw;
+
+	// h~(k,t) = H0(k) e^{iwt} + conj(H0(-k)) e^{-iwt}
+	vec2 h = cmul(h0k, ePos) + cmul(h0mkConj, eNeg);
+
+	// horizontal displacement spectrum: D = -i * (k/|k|) * h
+	vec2 minus_i_h = vec2(h.y, -h.x);  // (-i) * h
+	vec2 Dx = (k.x / kLen) * minus_i_h;
+	vec2 Dz = (k.y / kLen) * minus_i_h;
+
+	imageStore(packed0, id, vec4(h, Dx));
+	imageStore(packed1, id, vec4(Dz, 0.0, 0.0));
+}

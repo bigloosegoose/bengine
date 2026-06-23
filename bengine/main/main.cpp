@@ -11,8 +11,13 @@
 #include "my_texture.h"
 #include "model.h"
 #include "camera.h"
+#include "sky.h"
+#include "ocean.h"
 
 using std::cout, std::endl, std::string, std::vector;
+
+// render the FFT ocean (default) or the old cube/grass scene; toggle with O
+bool oceanMode = true;
 
 //settings
 const unsigned int width = 800;
@@ -104,7 +109,7 @@ glm::vec3 pointLightPositions[] = {
 int main () {
 
 	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -210,7 +215,7 @@ int main () {
 	MTexture grassTex(GL_TEXTURE_2D, "textures/grass.png", true, 0);
 
 	tempGrassShader.use();
-	tempGrassShader.setInt("material.texture_diffuse1", grassTex.ID);
+	tempGrassShader.setInt("material.texture_diffuse1", 0);
 	//***********************************************************************************************
 
 	Shader lightSourceShader(R"(shaders\lightSourceShader.vert)", R"(shaders\lightSourceShader.frag)");
@@ -262,6 +267,12 @@ int main () {
 	Model backpack("models/backpack/backpack.obj");
 
 	//***********************************************************************************************
+	//FFT ocean + analytic sky
+	Sky sky;
+	Ocean ocean;
+	if (oceanMode) camera.Position = glm::vec3(0.0f, 18.0f, 40.0f);
+
+	//***********************************************************************************************
 
 	//unbind all the stuff
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -286,9 +297,16 @@ int main () {
 		//model
 		glm::mat4 view = camera.GetViewMatrix();
 		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 1500.0f);
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+
+		if (oceanMode) {
+			ocean.update(currentTime);
+			sky.draw(view, projection);
+			ocean.draw(view, projection, camera.Position, sky.sunDir, sky.turbidity, sky.exposure);
+		}
+		else {
 
 		lightingShader.use();
 		lightingShader.setVec3("viewPos", camera.Position);
@@ -316,6 +334,7 @@ int main () {
 		//drawing random
 		tempGrassShader.use();
 		glBindVertexArray(grassVAO);
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, grassTex.ID);
 		for (unsigned int i = 0; i < grassPositions.size(); i++) {
 		
@@ -329,7 +348,7 @@ int main () {
 
 		}
 
-		
+		} // end !oceanMode
 
 		//unbind stuff (keep code below this out of any loops)
 		glBindVertexArray(0);
@@ -351,6 +370,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
+	}
+	if (key == GLFW_KEY_O && action == GLFW_PRESS) {
+		oceanMode = !oceanMode;
 	}
 }
 
