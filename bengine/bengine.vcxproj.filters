@@ -47,6 +47,12 @@
     <None Include="shaders\temp.vert">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="shaders\lab.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\lab.vert">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\shader.h">

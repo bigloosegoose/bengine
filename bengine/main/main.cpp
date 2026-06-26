@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <map>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -15,8 +16,8 @@
 using std::cout, std::endl, std::string, std::vector;
 
 //settings
-const unsigned int width = 800;
-const unsigned int height = 600;
+unsigned int width = 800;
+unsigned int height = 600;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -39,48 +40,49 @@ void outlineModel(Model model, Shader defShader, glm::vec3 position);
 
 
 float vertices[] = {
-	// positions		  //normals          // texture coords
-	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-	 0.5f, -0.5f, -0.5f,  0.0f, 0.0f, -1.0f, 1.0f, 0.0f,
-	 0.5f,  0.5f, -0.5f,  0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
-	 0.5f,  0.5f, -0.5f,  0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
-	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  1.0f, 1.0f, 0.0f,
-	 0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  1.0f, 1.0f, 1.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  1.0f, 0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
-
-	-0.5f,  0.5f,  0.5f, -1.0f, 0.0f,  0.0f, 1.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f, -1.0f, 0.0f,  0.0f, 1.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f, -1.0f, 0.0f,  0.0f, 0.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f, -1.0f, 0.0f,  0.0f, 1.0f, 0.0f,
-
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f, 1.0f, 0.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 0.0f,  0.0f, 1.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f, 1.0f, 0.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, 0.0f, 0.0f,
-
-	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f,
-	 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f,
-	 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f,
-
-	-0.5f,  0.5f, -0.5f, 0.0f,   1.0f,  0.0f, 0.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f, 0.0f,   1.0f,  0.0f, 1.0f, 0.0f,
-	 0.5f,  0.5f, -0.5f, 0.0f,   1.0f,  0.0f, 1.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f, 0.0f,   1.0f,  0.0f, 1.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f, 0.0f,   1.0f,  0.0f, 0.0f, 1.0f,
-	-0.5f,  0.5f,  0.5f, 0.0f,   1.0f,  0.0f, 0.0f, 0.0f
+	// positions          // normals           // texture coords
+	// back face
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f, // bottom-left
+	 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f, // bottom-right    
+	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f, // top-right             
+	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f, // top-right
+	-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f, // top-left
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f, // bottom-left                
+	// front face
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f, // bottom-left
+	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f, // top-right
+	 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 0.0f, // bottom-right        
+	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f, // top-right
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f, // bottom-left
+	-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f, // top-left        
+	// left face
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-right
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-left
+	-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f, // top-left       
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-left
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-right
+	-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f, // bottom-right
+	// right face
+	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-left
+	 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, // top-right      
+	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-right          
+	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-right
+	 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f, // bottom-left
+	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-left
+	 // bottom face          
+	 -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f, // top-right
+	  0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f, // bottom-left
+	  0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f, // top-left        
+	  0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f, // bottom-left
+	 -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f, // top-right
+	 -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f, // bottom-right
+	 // top face
+	 -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f, // top-left
+	  0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f, // top-right
+	  0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f, // bottom-right                 
+	  0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f, // bottom-right
+	 -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f, // bottom-left  
+	 -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f  // top-left              
 };
 
 float vertices2[] = {
@@ -92,6 +94,16 @@ float vertices2[] = {
 	-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
 };
 
+float quadVertices[] = {
+	// positions	// texCoords
+	-1.0f,  1.0f,	0.0f, 1.0f,	
+	-1.0f, -1.0f,	0.0f, 0.0f,
+	 1.0f, -1.0f,	1.0f, 0.0f,
+	-1.0f,  1.0f,	0.0f, 1.0f,
+	 1.0f, -1.0f,	1.0f, 0.0f,
+	 1.0f,  1.0f,	1.0f, 1.0f
+};
+
 glm::vec3 pointLightPositions[] = {
 	glm::vec3(0.7f, 0.2f,  2.0f),
 	glm::vec3(2.3f, -3.3f, -4.0f),
@@ -101,7 +113,7 @@ glm::vec3 pointLightPositions[] = {
 
 
 //****************************************************************************************************************************************
-int main () {
+int main() {
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -116,13 +128,13 @@ int main () {
 	GLFWwindow* window = glfwCreateWindow(width, height, "SCWEEN", NULL, NULL);
 	if (window == NULL)
 	{
-	std::cout << "Failed to create GLFW window" << std::endl;
-	glfwTerminate();
-	return -1;
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
 	}
 	glfwMakeContextCurrent(window);
 
-//important -> load all the function pointers for openGL before calling any of its functions
+	//important -> load all the function pointers for openGL before calling any of its functions
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 
 		std::cout << "Failed to initialize GLAD" << std::endl;
@@ -138,6 +150,11 @@ int main () {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_STENCIL_TEST);
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glEnable(GL_CULL_FACE);
+	glFrontFace(GL_CCW);
 
 
 	camera.SetCameraMode(FLY);
@@ -163,54 +180,109 @@ int main () {
 
 
 	//***********************************************************************************************
-	Shader lightingShader(R"(shaders\lightingShader.vert)", R"(shaders\lightingShader.frag)");
+	//quad VAO, VBO
+	unsigned int quadVAO, quadVBO;
+	glGenVertexArrays(1, &quadVAO);
+	glGenBuffers(1, &quadVBO);
+	glBindVertexArray(quadVAO);
 
-	lightingShader.use();
+	glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+	//VertexPos Attribute
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	//texture attribute
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	//***********************************************************************************************
+	//frame buffers
+	unsigned int FBO;
+	glGenFramebuffers(1, &FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+	unsigned int texColorBuffer;
+	glGenTextures(1, &texColorBuffer);
+	glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glBindTexture(GL_TEXTURE_2D, 0); // unbinding so its not interfered with / interfering
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
+
+	//we do need depth & stencil testing, but not sampling, so we use a Render Buffer for it.
+	//creating render buffer(alternative, not necessary)
+
+	unsigned int RBO;
+	glGenRenderbuffers(1, &RBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
 	
+	Shader screenShader(R"(shaders/lab.vert)", R"(shaders/lab.frag)");
+
+	//to be executed last
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	
+
+	//***********************************************************************************************
+	Shader lightingShader(R"(shaders\lightingShader.vert)", R"(shaders\lightingShader.frag)");
+	lightingShader.use();
 	//setting the material and light (temp?)
 	lightingShader.setFloat("material.shininess", 32.0f);
 
-	
+	//temp box shader
+	Shader boxShader(R"(shaders\lightingShader.vert)", R"(shaders\temp.frag)");
 	//***********************************************************************************************
-	//MTexture diffuseMap(GL_TEXTURE_2D, "textures/container2.png", true, 0);
+	MTexture diffuseMap(GL_TEXTURE_2D, "textures/container.jpg", true, 0);
+	MTexture specularMap(GL_TEXTURE_2D, "textures/container2_specular.png", true, 1);
 
-	//MTexture specularMap(GL_TEXTURE_2D, "textures/container2_specular.png", true, 1);
-
-	//GRASS
+	//GRASS no more
 	unsigned int grassVAO, grassVBO;
 	glGenVertexArrays(1, &grassVAO);
 	glGenBuffers(1, &grassVBO);
 	glBindVertexArray(grassVAO);
 
-	
-
 	glBindBuffer(GL_ARRAY_BUFFER, grassVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
-
-	//VertexPos Attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	//normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	//texture attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-	vector<glm::vec3> grassPositions;
-	grassPositions.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
-	grassPositions.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
-	grassPositions.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
-	grassPositions.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
-	grassPositions.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
-
-	Shader tempGrassShader(R"(shaders/lightingShader.vert)", R"(shaders/temp.frag)");
 	
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);//VertexPos Attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);//normal attribute
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);//texture attribute
 
-	MTexture grassTex(GL_TEXTURE_2D, "textures/grass.png", true, 0);
+	vector<glm::vec3> windows;
+	windows.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
+	windows.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
+	windows.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
+	windows.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
+	windows.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
+
+	std::map<float, glm::vec3> sorted;
+	for (unsigned int i = 0; i < windows.size(); i++) {
+
+		float distance = glm::length(camera.Position - windows[i]);
+		sorted[distance] = windows[i];
+	}
+	Shader tempGrassShader(R"(shaders/lightingShader.vert)", R"(shaders/temp.frag)");
+
+
+	MTexture grassTex(GL_TEXTURE_2D, "textures/metal.png", true, 0);
+	grassTex.wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+	MTexture playerTex(GL_TEXTURE_2D, "textures/LR.png", true, 0);
+	//playerTex.wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
 	tempGrassShader.use();
-	tempGrassShader.setInt("material.texture_diffuse1", grassTex.ID);
+	//remember that when setting a texture in a shader you need give it the texunit idiot
+	tempGrassShader.setInt("material.texture_diffuse1", 0);
 	//***********************************************************************************************
 
 	Shader lightSourceShader(R"(shaders\lightSourceShader.vert)", R"(shaders\lightSourceShader.frag)");
@@ -268,6 +340,7 @@ int main () {
 	glBindVertexArray(0);
 	glLinkProgram(0);
 
+	//######################################################################################################
 	//render loop
 	glViewport(0, 0, 800, 600);
 	while (!glfwWindowShouldClose(window)) {
@@ -275,68 +348,156 @@ int main () {
 		float currentTime = (float)glfwGetTime();
 		deltaTime = currentTime - lastFrame;
 		lastFrame = currentTime;
-
 		processInput(window);
 
-		//clear color buffer and depth buffer
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		//matrices
+		glm::mat4 model = glm::mat4(1.0f);
+		glm::mat4 view = camera.GetViewMatrix();
+		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)width/(float)height, 0.1f, 100.0f);
+		glm::mat4 rotationMat = glm::mat4(1.0f);
+		rotationMat = glm::rotate(rotationMat, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		//mirror vectors??
+		glm::vec3 mirrorPosition = glm::vec3(0.0f, 0.0f, 5.0f);
+		glm::vec4 camFront = glm::vec4(camera.Front, 1.0);
+		glm::vec3 camInitPosition = camera.Position;
+		glm::vec3 camInitDirection = camera.Front;
+		camera.Position = mirrorPosition;
+		camera.Front = glm::vec3((rotationMat * camFront).x, (rotationMat * camFront).y, (rotationMat * camFront).z);
+
+		//first pass(this scene to be rendered from the mirror's pov)
+		glBindFramebuffer(GL_FRAMEBUFFER,FBO);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-
-		//model
-		glm::mat4 view = camera.GetViewMatrix();
-		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 100.0f);
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-
-		lightingShader.use();
-		lightingShader.setVec3("viewPos", camera.Position);
-		lightingShader.setMat4("view", view);
-		lightingShader.setMat4("projection", projection);
-		lightingShader.setMat4("model", model);
-		
-		// spotLight
-		lightingShader.setVec3("spotLight.position", camera.Position);
-		lightingShader.setVec3("spotLight.direction", camera.Front);
-		lightingShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
-		lightingShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
-		lightingShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
-		lightingShader.setFloat("spotLight.constant", 1.0f);
-		lightingShader.setFloat("spotLight.linear", 0.09f);
-		lightingShader.setFloat("spotLight.quadratic", 0.032f);
-		lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-		lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
-
-		//backpack.Draw(lightingShader);
-
-		//bad outline function testing
-		//outlineModel(backpack, lightingShader, glm::vec3(5.0f));
-
-		//drawing random
-		tempGrassShader.use();
+		//floor
+		glDisable(GL_CULL_FACE);
+		glEnable(GL_DEPTH_TEST);
 		glBindVertexArray(grassVAO);
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, grassTex.ID);
-		for (unsigned int i = 0; i < grassPositions.size(); i++) {
+		model = glm::translate(model, glm::vec3(0.0f, -0.501f, 0.0f));
+		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(10.0f, 10.0f, 0.0f));
+		tempGrassShader.use();
+		tempGrassShader.setInt("material_diffuse1", 0);
+		tempGrassShader.setMat4("model",model);
+		tempGrassShader.setMat4("view",view);
+		tempGrassShader.setMat4("projection",projection);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		//cube
+		glEnable(GL_CULL_FACE);
+		glFrontFace(GL_CW);
+		glEnable(GL_DEPTH_TEST);
+		glBindVertexArray(VAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, diffuseMap.ID);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+		boxShader.use();
+		boxShader.setInt("material_diffuse1", 0);
+		boxShader.setInt("material_specular1", 0);
+		boxShader.setMat4("model",model);
+		boxShader.setMat4("view",view);
+		boxShader.setMat4("projection",projection);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+		boxShader.setMat4("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//rendering a player?
+		/*glDisable(GL_CULL_FACE);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, playerTex.ID);
+		boxShader.setInt("material_diffuse1", 0);
+		boxShader.setInt("material_specular1", 0);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, mirrorPosition);
+		boxShader.setMat4("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);*/
+
+		//second pass drawn from player pov
+		camera.Position = camInitPosition;
+		camera.Front = camInitDirection;
+
 		
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, grassPositions[i]);
-			tempGrassShader.setMat4("model", model);
-			tempGrassShader.setVec3("viewPos", camera.Position);
-			tempGrassShader.setMat4("view", view);
-			tempGrassShader.setMat4("projection", projection);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
+		view = camera.GetViewMatrix();
 
-		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		
+		//floor
+		glDisable(GL_CULL_FACE);
+		glEnable(GL_DEPTH_TEST);
+		glBindVertexArray(grassVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, grassTex.ID);
+		model = glm::translate(model, glm::vec3(0.0f, -0.501f, 0.0f));
+		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(10.0f, 10.0f, 0.0f));
+		tempGrassShader.use();
+		tempGrassShader.setInt("material_diffuse1", 0);
+		tempGrassShader.setMat4("model", model);
+		tempGrassShader.setMat4("view", view);
+		tempGrassShader.setMat4("projection", projection);
+		glDisable(GL_DEPTH_TEST);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		//unbind stuff (keep code below this out of any loops)
+		//cube
+		glEnable(GL_CULL_FACE);
+		glFrontFace(GL_CW);
+		glEnable(GL_DEPTH_TEST);
+		glBindVertexArray(VAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, diffuseMap.ID);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+		boxShader.use();
+		boxShader.setInt("material_diffuse1", 0);
+		boxShader.setInt("material_specular1", 0);
+		boxShader.setMat4("model", model);
+		boxShader.setMat4("view", view);
+		boxShader.setMat4("projection", projection);
+		glDisable(GL_DEPTH_TEST);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+		boxShader.setMat4("model", model);
+		glDisable(GL_DEPTH_TEST);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+		//screen quad
+		glBindVertexArray(quadVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, mirrorPosition);
+		projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+		screenShader.use();
+		screenShader.setMat4("model", model);
+		screenShader.setMat4("view", view);
+		screenShader.setMat4("projection", projection);
+		screenShader.setInt("screenTexture", 0);
+		glDisable(GL_DEPTH_TEST);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
+		//unbind stuff 
 		glBindVertexArray(0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
 		//swap
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+
+
 	}
+//######################################################################################################
 
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
@@ -397,8 +558,12 @@ void processInput(GLFWwindow* window) {
 	}
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-	glViewport(0, 0, width, height);
+void framebuffer_size_callback(GLFWwindow* window, int fwidth, int fheight) {
+	glViewport(0, 0, fwidth, fheight);
+
+	//width = fwidth;
+	//height = fheight;
+
 }
 
 //EWWW function
@@ -408,7 +573,7 @@ void outlineModel(Model model, Shader defShader, glm::vec3 position) {
 
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	glStencilMask(0xFF);
-	glStencilFunc(GL_ALWAYS,1,0xFF);
+	glStencilFunc(GL_ALWAYS, 1, 0xFF);
 	defShader.use();
 
 	glm::mat4 modelMat = glm::mat4(1.0f);
@@ -416,7 +581,7 @@ void outlineModel(Model model, Shader defShader, glm::vec3 position) {
 	defShader.setMat4("model", modelMat);
 	model.Draw(defShader);
 
-	
+
 
 	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 	glStencilMask(0x00);

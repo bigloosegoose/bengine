@@ -24,6 +24,8 @@
     <ClCompile Include="main\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\lab.frag" />
+    <None Include="shaders\lab.vert" />
     <None Include="shaders\lightSourceShader.vert" />
     <None Include="shaders\lightingShader.vert" />
     <None Include="shaders\lightingShader.frag" />

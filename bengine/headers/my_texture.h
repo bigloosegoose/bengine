@@ -56,7 +56,7 @@ public:
 
 		}
 		else {
-			std::cout << "failed to load the texture image!" << std::endl;
+			std::cout << "ERROR::MTEXTURE::failed to load the texture image!" << std::endl;
 		}
 	}
 
