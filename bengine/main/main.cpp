@@ -16,8 +16,8 @@
 using std::cout, std::endl, std::string, std::vector;
 
 //settings
-unsigned int width = 800;
-unsigned int height = 600;
+unsigned int width = 1920;
+unsigned int height = 1008;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -202,10 +202,10 @@ int main() {
 	glGenFramebuffers(1, &FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-	unsigned int texColorBuffer;
+	unsigned int texColorBuffer; 
 	glGenTextures(1, &texColorBuffer);
 	glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -218,7 +218,7 @@ int main() {
 	unsigned int RBO;
 	glGenRenderbuffers(1, &RBO);
 	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
 	
@@ -279,6 +279,7 @@ int main() {
 	grassTex.wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 	MTexture playerTex(GL_TEXTURE_2D, "textures/LR.png", true, 0);
 	//playerTex.wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+	MTexture asciiTex(GL_TEXTURE_2D, "textures/8x8.png", true, 0);
 
 	tempGrassShader.use();
 	//remember that when setting a texture in a shader you need give it the texunit idiot
@@ -342,7 +343,7 @@ int main() {
 
 	//######################################################################################################
 	//render loop
-	glViewport(0, 0, 800, 600);
+	glViewport(0, 0, width, height);
 	while (!glfwWindowShouldClose(window)) {
 
 		float currentTime = (float)glfwGetTime();
@@ -350,34 +351,28 @@ int main() {
 		lastFrame = currentTime;
 		processInput(window);
 
+		//RE SIZEEEEEEEEEE
+		glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
 		//matrices
 		glm::mat4 model = glm::mat4(1.0f);
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)width/(float)height, 0.1f, 100.0f);
-		glm::mat4 rotationMat = glm::mat4(1.0f);
-		rotationMat = glm::rotate(rotationMat, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-		//mirror vectors??
-		glm::vec3 mirrorPosition = glm::vec3(0.0f, 0.5f, -5.0f);
-		glm::vec4 camFront = glm::vec4(camera.Front, 1.0);
-		glm::vec3 camInitPosition = camera.Position;
-		glm::vec3 camInitDirection = camera.Front;
-		camera.Position = mirrorPosition;
-		camera.Front = glm::vec3((rotationMat * camFront).x, (rotationMat * camFront).y, (rotationMat * camFront).z);
-		//camera.Front = glm::reflect(glm::normalize(camera.Front), glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f)));
 		glm::mat4 view = camera.GetViewMatrix();
-		camera.ProcessMouseMovement(0,0, true);
-		camera.Front = camInitDirection;
-		camera.Position = camInitPosition;
-		camera.ProcessMouseMovement(0, 0, true);
 
-		//first pass(this scene to be rendered from the mirror's pov)
+		//first pass(off screen)
 		glBindFramebuffer(GL_FRAMEBUFFER,FBO);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
 
 		//floor
-		glDisable(GL_CULL_FACE);
-		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+		glFrontFace(GL_CCW);
 		glBindVertexArray(grassVAO);
 		glActiveTexture(GL_TEXTURE0);
 		model = glm::mat4(1.0f);
@@ -412,24 +407,8 @@ int main() {
 		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
 		boxShader.setMat4("model", model);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
-		//rendering a player?
-		glDisable(GL_CULL_FACE);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, playerTex.ID);
-		boxShader.setInt("material_diffuse1", 0);
-		boxShader.setInt("material_specular1", 0);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, camInitPosition);
-		boxShader.setMat4("model", model);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		//second pass drawn from player pov
-		camera.Position = camInitPosition;
-		camera.Front = camInitDirection;
-		//cout << camInitPosition.x << camInitPosition.y << camInitPosition.z << " " << camera.Position.x<< camera.Position.y<< camera.Position.z << endl;
-
-		view = camera.GetViewMatrix();
-
+		//second pass
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
@@ -437,61 +416,17 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//screen quad
-		glFrontFace(GL_CCW);
 		glBindVertexArray(quadVAO);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, mirrorPosition);
-		model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 		screenShader.use();
-		screenShader.setMat4("model", model);
-		screenShader.setMat4("view", view);
-		screenShader.setMat4("projection", projection);
 		screenShader.setInt("screenTexture", 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, asciiTex.ID);
+		screenShader.setInt("asciiMap", 1);
+		screenShader.setFloat("width", width);
+		screenShader.setFloat("height", height);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-
-		//floor
-		glDisable(GL_CULL_FACE);
-		glEnable(GL_DEPTH_TEST);
-		glBindVertexArray(grassVAO);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, grassTex.ID);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, -0.501f, 0.0f));
-		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(10.0f, 10.0f, 0.0f));
-		tempGrassShader.use();
-		tempGrassShader.setInt("material_diffuse1", 0);
-		tempGrassShader.setMat4("model", model);
-		tempGrassShader.setMat4("view", view);
-		tempGrassShader.setMat4("projection", projection);
-		//glDisable(GL_DEPTH_TEST);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-
-		//cube
-		glEnable(GL_CULL_FACE);
-		glFrontFace(GL_CW);
-		glEnable(GL_DEPTH_TEST);
-		glBindVertexArray(VAO);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, diffuseMap.ID);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-		boxShader.use();
-		boxShader.setInt("material_diffuse1", 0);
-		boxShader.setMat4("model", model);
-		boxShader.setMat4("view", view);
-		boxShader.setMat4("projection", projection);
-		glDisable(GL_DEPTH_TEST);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-		boxShader.setMat4("model", model);
-		glDisable(GL_DEPTH_TEST);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-
 
 
 
@@ -570,9 +505,8 @@ void processInput(GLFWwindow* window) {
 void framebuffer_size_callback(GLFWwindow* window, int fwidth, int fheight) {
 	glViewport(0, 0, fwidth, fheight);
 
-	//width = fwidth;
-	//height = fheight;
-
+	width = fwidth;
+	height = fheight;
 }
 
 //EWWW function
