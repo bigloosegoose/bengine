@@ -352,18 +352,23 @@ int main() {
 
 		//matrices
 		glm::mat4 model = glm::mat4(1.0f);
-		glm::mat4 view = camera.GetViewMatrix();
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)width/(float)height, 0.1f, 100.0f);
 		glm::mat4 rotationMat = glm::mat4(1.0f);
 		rotationMat = glm::rotate(rotationMat, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 		//mirror vectors??
-		glm::vec3 mirrorPosition = glm::vec3(0.0f, 0.0f, 5.0f);
+		glm::vec3 mirrorPosition = glm::vec3(0.0f, 0.5f, -5.0f);
 		glm::vec4 camFront = glm::vec4(camera.Front, 1.0);
 		glm::vec3 camInitPosition = camera.Position;
 		glm::vec3 camInitDirection = camera.Front;
 		camera.Position = mirrorPosition;
 		camera.Front = glm::vec3((rotationMat * camFront).x, (rotationMat * camFront).y, (rotationMat * camFront).z);
+		//camera.Front = glm::reflect(glm::normalize(camera.Front), glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f)));
+		glm::mat4 view = camera.GetViewMatrix();
+		camera.ProcessMouseMovement(0,0, true);
+		camera.Front = camInitDirection;
+		camera.Position = camInitPosition;
+		camera.ProcessMouseMovement(0, 0, true);
 
 		//first pass(this scene to be rendered from the mirror's pov)
 		glBindFramebuffer(GL_FRAMEBUFFER,FBO);
@@ -375,6 +380,7 @@ int main() {
 		glEnable(GL_DEPTH_TEST);
 		glBindVertexArray(grassVAO);
 		glActiveTexture(GL_TEXTURE0);
+		model = glm::mat4(1.0f);
 		glBindTexture(GL_TEXTURE_2D, grassTex.ID);
 		model = glm::translate(model, glm::vec3(0.0f, -0.501f, 0.0f));
 		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -407,21 +413,21 @@ int main() {
 		boxShader.setMat4("model", model);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		//rendering a player?
-		/*glDisable(GL_CULL_FACE);
+		glDisable(GL_CULL_FACE);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, playerTex.ID);
 		boxShader.setInt("material_diffuse1", 0);
 		boxShader.setInt("material_specular1", 0);
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, mirrorPosition);
+		model = glm::translate(model, camInitPosition);
 		boxShader.setMat4("model", model);
-		glDrawArrays(GL_TRIANGLES, 0, 36);*/
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		//second pass drawn from player pov
 		camera.Position = camInitPosition;
 		camera.Front = camInitDirection;
+		//cout << camInitPosition.x << camInitPosition.y << camInitPosition.z << " " << camera.Position.x<< camera.Position.y<< camera.Position.z << endl;
 
-		
 		view = camera.GetViewMatrix();
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -430,12 +436,29 @@ int main() {
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		//screen quad
+		glFrontFace(GL_CCW);
+		glBindVertexArray(quadVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, mirrorPosition);
+		model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+		screenShader.use();
+		screenShader.setMat4("model", model);
+		screenShader.setMat4("view", view);
+		screenShader.setMat4("projection", projection);
+		screenShader.setInt("screenTexture", 0);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
 		//floor
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
 		glBindVertexArray(grassVAO);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, grassTex.ID);
+		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, -0.501f, 0.0f));
 		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(10.0f, 10.0f, 0.0f));
@@ -444,7 +467,7 @@ int main() {
 		tempGrassShader.setMat4("model", model);
 		tempGrassShader.setMat4("view", view);
 		tempGrassShader.setMat4("projection", projection);
-		glDisable(GL_DEPTH_TEST);
+		//glDisable(GL_DEPTH_TEST);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		//cube
@@ -458,7 +481,6 @@ int main() {
 		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
 		boxShader.use();
 		boxShader.setInt("material_diffuse1", 0);
-		boxShader.setInt("material_specular1", 0);
 		boxShader.setMat4("model", model);
 		boxShader.setMat4("view", view);
 		boxShader.setMat4("projection", projection);
@@ -471,20 +493,7 @@ int main() {
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
-		//screen quad
-		glBindVertexArray(quadVAO);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, mirrorPosition);
-		projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
-		screenShader.use();
-		screenShader.setMat4("model", model);
-		screenShader.setMat4("view", view);
-		screenShader.setMat4("projection", projection);
-		screenShader.setInt("screenTexture", 0);
-		glDisable(GL_DEPTH_TEST);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+
 
 
 		//unbind stuff 
