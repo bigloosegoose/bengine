@@ -13,11 +13,15 @@
 #include "model.h"
 #include "camera.h"
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 using std::cout, std::endl, std::string, std::vector;
 
 //settings
-unsigned int width = 1920;
-unsigned int height = 1008;
+unsigned int width = 800;
+unsigned int height = 600;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -27,6 +31,7 @@ float lastX = width / 2.0f;
 float lastY = height / 2.0f;
 bool firstMouse = true;
 
+bool cursorEnabled = false;
 
 //functions
 void processInput(GLFWwindow* window);
@@ -35,8 +40,14 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void toggleMouse(GLFWwindow* window);
 
 void outlineModel(Model model, Shader defShader, glm::vec3 position);
+
+void uiDefine(ImGuiIO io);
+void uiDraw();
+
+unsigned int loadCubemap(vector<string> faces);
 
 
 float vertices[] = {
@@ -83,6 +94,52 @@ float vertices[] = {
 	  0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f, // bottom-right
 	 -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f, // bottom-left  
 	 -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f  // top-left              
+};
+
+float cubeVertices[] = {
+	// positions          // normals           // texture coords
+	// back face
+	-1.0, -1.0, -1.0,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f, // bottom-left
+	 1.0, -1.0, -1.0,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f, // bottom-right    
+	 1.0,  1.0, -1.0,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f, // top-right             
+	 1.0,  1.0, -1.0,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f, // top-right
+	-1.0,  1.0, -1.0,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f, // top-left
+	-1.0, -1.0, -1.0,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f, // bottom-left                
+
+	-1.0, -1.0,  1.0,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f, // bottom-left
+	 1.0,  1.0,  1.0,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f, // top-right
+	 1.0, -1.0,  1.0,  0.0f,  0.0f,  1.0f,  1.0f, 0.0f, // bottom-right        
+	 1.0,  1.0,  1.0,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f, // top-right
+	-1.0, -1.0,  1.0,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f, // bottom-left
+	-1.0,  1.0,  1.0,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f, // top-left        
+//1.0ft 1.0
+	-1.0,  1.0,  1.0, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-right
+	-1.0, -1.0, -1.0, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-left
+	-1.0,  1.0, -1.0, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f, // top-left       
+	-1.0, -1.0, -1.0, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-left
+	-1.0,  1.0,  1.0, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-right
+	-1.0, -1.0,  1.0, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f, // bottom-right
+
+	 1.0,  1.0,  1.0,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-left
+	 1.0,  1.0, -1.0,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, // top-right      
+	 1.0, -1.0, -1.0,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-right          
+	 1.0, -1.0, -1.0,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-right
+	 1.0, -1.0,  1.0,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f, // bottom-left
+	 1.0,  1.0,  1.0,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-left
+	      
+	 -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f, // top-right
+	  1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f, // bottom-left
+	  1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f, // top-left        
+	  1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f, // bottom-left
+	 -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f, // top-right
+	 -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f, // bottom-right
+	 
+	 -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f, // top-left
+	  1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f, // top-right
+	  1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f, // bottom-right                 
+	  1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f, // bottom-right
+	 -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f, // bottom-left  
+	 -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f  // top-left              
 };
 
 float vertices2[] = {
@@ -142,6 +199,16 @@ int main() {
 		return -1;
 	}
 
+	//setting up imgui
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	ImGui::StyleColorsDark();
+	//Setup platform for imgui
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
@@ -155,7 +222,6 @@ int main() {
 
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
-
 
 	camera.SetCameraMode(FLY);
 
@@ -212,8 +278,6 @@ int main() {
 	glBindTexture(GL_TEXTURE_2D, 0); // unbinding so its not interfered with / interfering
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
 
-	//we do need depth & stencil testing, but not sampling, so we use a Render Buffer for it.
-	//creating render buffer(alternative, not necessary)
 
 	unsigned int RBO;
 	glGenRenderbuffers(1, &RBO);
@@ -229,7 +293,34 @@ int main() {
 		cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	
+
+	//***********************************************************************************************
+
+	//skybox
+	vector<string> textures_faces;
+	textures_faces.push_back(R"(textures/skybox/right.jpg)");
+	textures_faces.push_back(R"(textures/skybox/left.jpg)");
+	textures_faces.push_back(R"(textures/skybox/top.jpg)");
+	textures_faces.push_back(R"(textures/skybox/bottom.jpg)");
+	textures_faces.push_back(R"(textures/skybox/back.jpg)");
+	textures_faces.push_back(R"(textures/skybox/front.jpg)");
+
+	unsigned int skyboxTexture = loadCubemap(textures_faces);
+
+	Shader skyboxShader(R"(shaders\skybox.vert)", R"(shaders\skybox.frag)");
+
+	unsigned int skyboxVAO, skyboxVBO;
+	glGenBuffers(1, &skyboxVBO);
+	glGenVertexArrays(1, &skyboxVAO);
+	glBindVertexArray(skyboxVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+	//VertexPos Attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+
 
 	//***********************************************************************************************
 	Shader lightingShader(R"(shaders\lightingShader.vert)", R"(shaders\lightingShader.frag)");
@@ -272,65 +363,22 @@ int main() {
 		float distance = glm::length(camera.Position - windows[i]);
 		sorted[distance] = windows[i];
 	}
+
 	Shader tempGrassShader(R"(shaders/lightingShader.vert)", R"(shaders/temp.frag)");
 
 
 	MTexture grassTex(GL_TEXTURE_2D, "textures/metal.png", true, 0);
-	grassTex.wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 	MTexture playerTex(GL_TEXTURE_2D, "textures/LR.png", true, 0);
-	//playerTex.wrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 	MTexture asciiTex(GL_TEXTURE_2D, "textures/8x8.png", true, 0);
+	mtWrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
 	tempGrassShader.use();
-	//remember that when setting a texture in a shader you need give it the texunit idiot
 	tempGrassShader.setInt("material.texture_diffuse1", 0);
-	//***********************************************************************************************
 
+	//***********************************************************************************************
 	Shader lightSourceShader(R"(shaders\lightSourceShader.vert)", R"(shaders\lightSourceShader.frag)");
-
-	//HELL
-	//***********************************************************************************************
-	lightingShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
-	lightingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
-	lightingShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
-	lightingShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
-	// point light 1
-	lightingShader.setVec3("pointLights[0].position", pointLightPositions[0]);
-	lightingShader.setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
-	lightingShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
-	lightingShader.setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
-	lightingShader.setFloat("pointLights[0].constant", 1.0f);
-	lightingShader.setFloat("pointLights[0].linear", 0.09f);
-	lightingShader.setFloat("pointLights[0].quadratic", 0.032f);
-	// point light 2
-	lightingShader.setVec3("pointLights[1].position", pointLightPositions[1]);
-	lightingShader.setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
-	lightingShader.setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
-	lightingShader.setVec3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
-	lightingShader.setFloat("pointLights[1].constant", 1.0f);
-	lightingShader.setFloat("pointLights[1].linear", 0.09f);
-	lightingShader.setFloat("pointLights[1].quadratic", 0.032f);
-	// point light 3
-	lightingShader.setVec3("pointLights[2].position", pointLightPositions[2]);
-	lightingShader.setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
-	lightingShader.setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
-	lightingShader.setVec3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
-	lightingShader.setFloat("pointLights[2].constant", 1.0f);
-	lightingShader.setFloat("pointLights[2].linear", 0.09f);
-	lightingShader.setFloat("pointLights[2].quadratic", 0.032f);
-	// point light 4
-	lightingShader.setVec3("pointLights[3].position", pointLightPositions[3]);
-	lightingShader.setVec3("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
-	lightingShader.setVec3("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
-	lightingShader.setVec3("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
-	lightingShader.setFloat("pointLights[3].constant", 1.0f);
-	lightingShader.setFloat("pointLights[3].linear", 0.09f);
-	lightingShader.setFloat("pointLights[3].quadratic", 0.032f);
-
-	//***********************************************************************************************
-
-	//temporary shader for this model
 	Shader outlineShader(R"(shaders/lightingShader.vert)", R"(shaders/temp.frag)");
+
 	//loading models
 	Model backpack("models/backpack/backpack.obj");
 
@@ -362,13 +410,31 @@ int main() {
 		//matrices
 		glm::mat4 model = glm::mat4(1.0f);
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)width/(float)height, 0.1f, 100.0f);
-		glm::mat4 view = camera.GetViewMatrix();
+		glm::mat4 view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
 
 		//first pass(off screen)
-		glBindFramebuffer(GL_FRAMEBUFFER,FBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
+
+		//skybox
+		glDisable(GL_CULL_FACE);
+		glDepthMask(GL_FALSE);
+		glDepthFunc(GL_LEQUAL);
+		skyboxShader.use();
+		skyboxShader.setMat4("projection", projection);
+		skyboxShader.setMat4("view", view);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
+		skyboxShader.setInt("skybox", 0);
+		glBindVertexArray(skyboxVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDepthMask(GL_TRUE);
+		glEnable(GL_CULL_FACE);
+		glDepthFunc(GL_LESS);
+		view = camera.GetViewMatrix();
+
 
 		//floor
 		glEnable(GL_CULL_FACE);
@@ -428,12 +494,13 @@ int main() {
 		screenShader.setFloat("height", height);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
-
-
-
 		//unbind stuff 
 		glBindVertexArray(0);
 		glBindTexture(GL_TEXTURE_2D, 0);
+		
+		//UI
+		uiDefine(io);	//Design
+		uiDraw();		//Render
 
 		//swap
 		glfwSwapBuffers(window);
@@ -447,6 +514,11 @@ int main() {
 	glDeleteBuffers(1, &VBO);
 	glDeleteProgram(lightingShader.ID);
 
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
 }
@@ -457,6 +529,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
 	}
+
+	if (key == GLFW_KEY_LEFT_ALT && action == GLFW_PRESS) {
+		toggleMouse(window);
+	}
+
+
+
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
@@ -464,21 +543,24 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
-	float xpos = static_cast<float>(xposIn);
-	float ypos = static_cast<float>(yposIn);
+	if (cursorEnabled == false) 
+	{
+		float xpos = static_cast<float>(xposIn);
+		float ypos = static_cast<float>(yposIn);
 
-	if (firstMouse) {
+		if (firstMouse) {
+			lastX = xpos;
+			lastY = ypos;
+			firstMouse = false;
+		}
+
+		float xoffset = xpos - lastX;
+		float yoffset = lastY - ypos; //reversed, y goes bottom to top
 		lastX = xpos;
 		lastY = ypos;
-		firstMouse = false;
+
+		camera.ProcessMouseMovement(xoffset, yoffset, deltaTime);
 	}
-
-	float xoffset = xpos - lastX;
-	float yoffset = lastY - ypos; //reversed, y goes bottom to top
-	lastX = xpos;
-	lastY = ypos;
-
-	camera.ProcessMouseMovement(xoffset, yoffset, deltaTime);
 }
 
 void processInput(GLFWwindow* window) {
@@ -546,4 +628,64 @@ void outlineModel(Model model, Shader defShader, glm::vec3 position) {
 	glDisable(GL_DEPTH_TEST);
 	glStencilMask(0xFF);
 
+}
+
+void toggleMouse(GLFWwindow* window) {
+	if (cursorEnabled == true) {
+		cursorEnabled = false;
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
+	else {
+		cursorEnabled = true;
+		firstMouse = true;
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+}
+
+void uiDefine(ImGuiIO io) {
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	{
+		ImGui::Begin("Pending Panel");
+		ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+		ImGui::End();
+	}
+}
+
+void uiDraw() {
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+unsigned int loadCubemap(vector<string> faces) {
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	int width, height, nrChannels;
+	unsigned char* data;
+	for (unsigned int i = 0; i < faces.size(); i++) {
+		data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+
+		if (data) 
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			stbi_image_free(data);
+		}
+		else {
+			cout << "ERROR::CUBEMAP::FAILED TO LOAD IMAGE" << endl;
+			stbi_image_free(data);
+		}
+
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	
+
+
+	return textureID;
 }

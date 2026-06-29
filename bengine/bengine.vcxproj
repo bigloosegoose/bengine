@@ -21,6 +21,13 @@
   <ItemGroup>
     <ClCompile Include="main\glad.c" />
     <ClCompile Include="main\imageLoading.cpp" />
+    <ClCompile Include="main\imgui\imgui.cpp" />
+    <ClCompile Include="main\imgui\imgui_demo.cpp" />
+    <ClCompile Include="main\imgui\imgui_draw.cpp" />
+    <ClCompile Include="main\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="main\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="main\imgui\imgui_tables.cpp" />
+    <ClCompile Include="main\imgui\imgui_widgets.cpp" />
     <ClCompile Include="main\main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -30,6 +37,8 @@
     <None Include="shaders\lightingShader.vert" />
     <None Include="shaders\lightingShader.frag" />
     <None Include="shaders\lightSourceShader.frag" />
+    <None Include="shaders\skybox.frag" />
+    <None Include="shaders\skybox.vert" />
     <None Include="shaders\temp.frag" />
     <None Include="shaders\temp.vert" />
   </ItemGroup>

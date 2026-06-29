@@ -4,6 +4,7 @@
 #include "stb_image.h"
 #include <iostream>
 
+GLenum globalTexType = GL_TEXTURE_2D;
 
 //a bad but proud texture class made by battak for loading textures easily
 
@@ -11,13 +12,10 @@ class MTexture {
 public:
 	//texture id?
 	unsigned int ID;
-	GLenum globalTexType = GL_TEXTURE_2D;
-	std::string type;
-
 
 
 	MTexture(GLenum GLtexType, const char* imagePath, bool verticallyFlip, GLenum texUnit) {
-		
+		GLenum globalTexType = GLtexType;
 
 
 		//create the texture
@@ -61,17 +59,14 @@ public:
 	}
 
 
-
-
-	void wrapMode(GLenum texWrapModeS, GLenum texWrapModeT, GLenum texWrapModeR) {
-		glTexParameteri(globalTexType, GL_TEXTURE_WRAP_S, texWrapModeS);
-		glTexParameteri(globalTexType, GL_TEXTURE_WRAP_T, texWrapModeT);
-		glTexParameteri(globalTexType, GL_TEXTURE_WRAP_R, texWrapModeR);
-	}
-	void filteringMode(GLenum texMinFilterMode, GLenum texMagFilterMode) {
-		glTexParameteri(globalTexType, GL_TEXTURE_MIN_FILTER, texMinFilterMode);
-		glTexParameteri(globalTexType, GL_TEXTURE_MAG_FILTER, texMagFilterMode);
-	}
-
-
 };
+
+void mtWrapMode(GLenum texWrapModeS, GLenum texWrapModeT, GLenum texWrapModeR) {
+	glTexParameteri(globalTexType, GL_TEXTURE_WRAP_S, texWrapModeS);
+	glTexParameteri(globalTexType, GL_TEXTURE_WRAP_T, texWrapModeT);
+	glTexParameteri(globalTexType, GL_TEXTURE_WRAP_R, texWrapModeR);
+}
+void mtFilteringMode(GLenum texMinFilterMode, GLenum texMagFilterMode) {
+	glTexParameteri(globalTexType, GL_TEXTURE_MIN_FILTER, texMinFilterMode);
+	glTexParameteri(globalTexType, GL_TEXTURE_MAG_FILTER, texMagFilterMode);
+}

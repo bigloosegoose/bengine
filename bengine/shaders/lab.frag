@@ -13,7 +13,7 @@ uniform float height;
 const vec2 charSize = vec2(8.0, 8.0);
 vec2 screenRes = vec2(width, height);
 
-void main()
+/*void main()
 {
 	// dividing into cells
 	vec2 numCells = screenRes / charSize;
@@ -37,4 +37,9 @@ void main()
 	vec4 asciiPixel = texture(asciiMap, mapUV);
 
 	FragColor = asciiPixel * vec4(sceneColor, 1.0);
+}*/
+
+void main() 
+{
+	FragColor = texture(screenTexture, TexCoords);
 }

@@ -27,6 +27,27 @@
     <ClCompile Include="main\imageLoading.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="main\imgui\imgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\imgui\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\imgui\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\imgui\imgui_impl_glfw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\imgui\imgui_impl_opengl3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\imgui\imgui_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main\imgui\imgui_widgets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\lightingShader.vert">
@@ -53,6 +74,8 @@
     <None Include="shaders\lab.vert">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="shaders\skybox.frag" />
+    <None Include="shaders\skybox.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\shader.h">
