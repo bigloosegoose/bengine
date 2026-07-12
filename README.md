@@ -25,6 +25,7 @@ Get around the scene using the following keyboard and mouse configurations:
 | **E / Q** | Move vertically downwards / upwards |
 | **Escape** | Close program |
 | **Left Alt** | Toggle mouse cursor unlock / Lock to screen |
+| **Left Shift** | Holding it increases the camera speed(move around faster) |
 
 ---
 
