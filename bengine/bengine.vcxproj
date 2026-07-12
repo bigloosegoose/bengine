@@ -181,22 +181,14 @@
       <AdditionalDependencies>$(ProjectDir)external\openglLibs\lib\assimp-vc145-mt.lib;$(ProjectDir)external\openglLibs\lib\glfw3.lib;$(ProjectDir)external\openglLibs\lib\OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /E /I /Y "$(ProjectDir)shaders" "$(OutDir)shaders\"
-<<<<<<< Updated upstream
-  
-xcopy /E /I /Y "$(ProjectDir)models" "$(OutDir)models\"
-  
-xcopy /E /I /Y "$(ProjectDir)textures" "$(OutDir)textures\"
-</Command>
-=======
+  <Command>xcopy /E /I /Y "$(ProjectDir)shaders" "$(OutDir)shaders\"
 
 xcopy /E /I /Y "$(ProjectDir)models" "$(OutDir)models\"
 
 xcopy /E /I /Y "$(ProjectDir)textures" "$(OutDir)textures\"
 
 xcopy /D /Y "$(SolutionDir)dlls\*.dll" "$(OutDir)"</Command>
->>>>>>> Stashed changes
-    </PostBuildEvent>
+</PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
