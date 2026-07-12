@@ -3,7 +3,16 @@ The learnopengl tutorial engine as my intro to engine dev and graphics programmi
 
 
 ---
+## Note for latest build:
+if you dont see the planet, thats because you are inside of it, I am sorry about that, just step back or move around to have it in the frame
 
+---
+## How to Build
+* open the bengine.slnx file
+* press the start without debugging option OR press ctrl + f5
+* if there are missing .dll files, copy the contents of the dlls folder to the bengine.exe directory
+
+---
 ## Controls
 
 Get around the scene using the following keyboard and mouse configurations:
