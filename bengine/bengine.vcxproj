@@ -159,7 +159,8 @@
       <AdditionalDependencies>glfw3.lib;opengl32.lib;assimp-vc145-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>signtool sign /f "C:\TestCert.pfx" /p "BATTAK" /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 "C:\Users\thebi\source\repos\bengine\x64\Debug\bengine.exe"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -181,11 +182,20 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /E /I /Y "$(ProjectDir)shaders" "$(OutDir)shaders\"
+<<<<<<< Updated upstream
   
 xcopy /E /I /Y "$(ProjectDir)models" "$(OutDir)models\"
   
 xcopy /E /I /Y "$(ProjectDir)textures" "$(OutDir)textures\"
 </Command>
+=======
+
+xcopy /E /I /Y "$(ProjectDir)models" "$(OutDir)models\"
+
+xcopy /E /I /Y "$(ProjectDir)textures" "$(OutDir)textures\"
+
+xcopy /D /Y "$(SolutionDir)dlls\*.dll" "$(OutDir)"</Command>
+>>>>>>> Stashed changes
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

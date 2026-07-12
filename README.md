@@ -9,8 +9,15 @@ if you dont see the planet, thats because you are inside of it, I am sorry about
 ---
 ## How to Build
 * open the bengine.slnx file
+<<<<<<< Updated upstream
 * press the start without debugging option OR press ctrl + f5
 * if there are missing .dll files, copy the contents of the dlls folder to the bengine.exe directory
+=======
+* change the Debug to Relase from the configuration dropdown
+* press the start without debugging option OR press ctrl + f5
+* (if there are missing .dll files, copy the contents of the dlls folder to the directory with bengine.exe) 
+
+>>>>>>> Stashed changes
 
 ---
 ## Controls
@@ -77,6 +84,10 @@ Images of renders I happen to take along the way
 ---
 
 ## Build & Requirements
+<<<<<<< Updated upstream
 * **Language:** C++17 or higher
+=======
+* **Language:** C++17 or higher (MSVC)
+>>>>>>> Stashed changes
 * **Graphics API:** OpenGL 3.3 Core Profile
 * **Dependencies Included:** GLFW, GLAD, GLM, Assimp, ImGui, stb_image
