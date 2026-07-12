@@ -76,6 +76,27 @@
     </None>
     <None Include="shaders\skybox.frag" />
     <None Include="shaders\skybox.vert" />
+    <None Include="shaders\basicTexture.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\basicTexture.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\basicGeometryShader.geo">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\instanceShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\instanceShader.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\starInstanceShader.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\starInstanceShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\shader.h">

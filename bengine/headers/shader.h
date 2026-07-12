@@ -3,8 +3,7 @@
 #include <glad/glad.h> //GET THOSE OPENGL HEADERS
 
 #include <glm/glm.hpp>
-//#include <glm/gtc/matrix_transform.hpp>
-//#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 
 #include <string>
@@ -18,9 +17,11 @@ class Shader
 public:
 	//the program ID
 	unsigned int ID;
+	unsigned int Vertex, Fragment, Geometry;
+
 
 	//constructor
-	Shader(const char* vertexPath, const char* fragmentPath) {
+	Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr) {
 		//get source code from file path
 		std::string vertexCode;
 		std::string fragmentCode;
@@ -66,8 +67,10 @@ public:
 		glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
 		if (!success) {
 			glGetShaderInfoLog(vertex, 512, NULL, infoLog);
-			std::cout << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
+			std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
 		};
+		Vertex = vertex;
+
 		//fShader
 		fragment = glCreateShader(GL_FRAGMENT_SHADER);
 		glShaderSource(fragment, 1, &fShaderCode, NULL);
@@ -76,14 +79,65 @@ public:
 		glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
 		if (!success) {
 			glGetShaderInfoLog(fragment, 512, NULL, infoLog);
-			std::cout << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
+			std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
 		};
+		Fragment = fragment;
+
+		//#########################################################################################################
+		//geometry shader wow
+
+		if (geometryPath) {
+			//get source code from file path
+			std::string geometryCode;
+			std::ifstream gShaderFile;
+			//make sure ifstream can throw errors
+			gShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+			try {
+				//open files
+				gShaderFile.open(geometryPath);
+				std::stringstream gShaderStream;
+				// read file's buffer content into the streams
+				gShaderStream << gShaderFile.rdbuf();
+				//close file handlers(as you do in other languages)
+				gShaderFile.close();
+				//convert stream(byte stream?) into string
+				geometryCode = gShaderStream.str();
+			}
+			catch (std::ifstream::failure e) {
+				std::cout << "ERROR::SHADER::GEOMETRY::FILE_NOT_SUCCESSFULLY_READ" << std::endl;
+			}
+			const char* gShaderCode = geometryCode.c_str();
+
+			//Debugging shader compilation
+
+			unsigned int geometry;
+			int success;
+			char infoLog[512];
+
+			//gShader
+			geometry = glCreateShader(GL_GEOMETRY_SHADER);
+			glShaderSource(geometry, 1, &gShaderCode, NULL);
+			glCompileShader(geometry);
+
+			glGetShaderiv(geometry, GL_COMPILE_STATUS, &success);
+			if (!success) {
+				glGetShaderInfoLog(geometry, 512, NULL, infoLog);
+				std::cout << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n" << infoLog << std::endl;
+			}
+			Geometry = geometry;
+
+		}
+
+		//#########################################################################################################
 
 		//shader program
-
 		ID = glCreateProgram();
-		glAttachShader(ID, vertex);
-		glAttachShader(ID, fragment);
+		glAttachShader(ID, Vertex);
+		glAttachShader(ID, Fragment);
+
+		if (geometryPath) glAttachShader(ID, Geometry);
+
 		glLinkProgram(ID);
 
 		//Debugging shader linking
@@ -100,6 +154,61 @@ public:
 
 	}
 
+	void attachGeometryShader(const char* geometryPath) 
+	{
+		//get source code from file path
+		std::string geometryCode;
+		std::ifstream gShaderFile;
+		//make sure ifstream can throw errors
+		gShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+		try {
+			//open files
+			gShaderFile.open(geometryPath);
+			std::stringstream gShaderStream;
+			// read file's buffer content into the streams
+			gShaderStream << gShaderFile.rdbuf();
+			//close file handlers(as you do in other languages)
+			gShaderFile.close();
+			//convert stream(byte stream?) into string
+			geometryCode = gShaderStream.str();
+		}
+		catch (std::ifstream::failure e) {
+			std::cout << "ERROR::SHADER::GEOMETRY::FILE_NOT_SUCCESSFULLY_READ" << std::endl;
+		}
+		const char* gShaderCode = geometryCode.c_str();
+
+		//Debugging shader compilation
+
+		unsigned int geometry;
+		int success;
+		char infoLog[512];
+
+		//gShader
+		geometry = glCreateShader(GL_GEOMETRY_SHADER);
+		glShaderSource(geometry, 1, &gShaderCode, NULL);
+		glCompileShader(geometry);
+
+		glGetShaderiv(geometry, GL_COMPILE_STATUS, &success);
+		if (!success) {
+			glGetShaderInfoLog(geometry, 512, NULL, infoLog);
+			std::cout << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n" << infoLog << std::endl;
+		}
+
+		glAttachShader(ID, geometry);
+		glLinkProgram(ID);
+
+		//Debugging shader linking
+
+		glGetProgramiv(ID, GL_LINK_STATUS, &success);
+		if (!success) {
+			glGetProgramInfoLog(ID, 512, NULL, infoLog);
+			std::cout << "ERROR::SHADER::PROGRAM::GEOMETRY::LINKING_FAILED\n" << infoLog << std::endl;
+		};
+
+		glDeleteShader(geometry);
+
+	}
 
 	// use or activate the shader
 	void use() {

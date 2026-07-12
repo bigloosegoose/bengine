@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <map>
+#include <random>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -17,6 +18,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+constexpr float PI = 3.1415926535f;
 using std::cout, std::endl, std::string, std::vector;
 
 //settings
@@ -36,13 +38,12 @@ bool cursorEnabled = false;
 //functions
 void processInput(GLFWwindow* window);
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void framebuffer_size_callback(GLFWwindow* window, int fwidth, int fheight);
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void toggleMouse(GLFWwindow* window);
 
-void outlineModel(Model model, Shader defShader, glm::vec3 position);
 
 void uiDefine(ImGuiIO io);
 void uiDraw();
@@ -96,50 +97,49 @@ float vertices[] = {
 	 -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f  // top-left              
 };
 
-float cubeVertices[] = {
-	// positions          // normals           // texture coords
-	// back face
-	-1.0, -1.0, -1.0,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f, // bottom-left
-	 1.0, -1.0, -1.0,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f, // bottom-right    
-	 1.0,  1.0, -1.0,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f, // top-right             
-	 1.0,  1.0, -1.0,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f, // top-right
-	-1.0,  1.0, -1.0,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f, // top-left
-	-1.0, -1.0, -1.0,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f, // bottom-left                
+float skyboxVertices[] = {
+	// positions          
+	-1.0f,  1.0f, -1.0f,
+	-1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
 
-	-1.0, -1.0,  1.0,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f, // bottom-left
-	 1.0,  1.0,  1.0,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f, // top-right
-	 1.0, -1.0,  1.0,  0.0f,  0.0f,  1.0f,  1.0f, 0.0f, // bottom-right        
-	 1.0,  1.0,  1.0,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f, // top-right
-	-1.0, -1.0,  1.0,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f, // bottom-left
-	-1.0,  1.0,  1.0,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f, // top-left        
-//1.0ft 1.0
-	-1.0,  1.0,  1.0, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-right
-	-1.0, -1.0, -1.0, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-left
-	-1.0,  1.0, -1.0, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f, // top-left       
-	-1.0, -1.0, -1.0, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-left
-	-1.0,  1.0,  1.0, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-right
-	-1.0, -1.0,  1.0, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f, // bottom-right
+	-1.0f, -1.0f,  1.0f,
+	-1.0f, -1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f,  1.0f,
+	-1.0f, -1.0f,  1.0f,
 
-	 1.0,  1.0,  1.0,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-left
-	 1.0,  1.0, -1.0,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, // top-right      
-	 1.0, -1.0, -1.0,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-right          
-	 1.0, -1.0, -1.0,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-right
-	 1.0, -1.0,  1.0,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f, // bottom-left
-	 1.0,  1.0,  1.0,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-left
-	      
-	 -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f, // top-right
-	  1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f, // bottom-left
-	  1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f, // top-left        
-	  1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f, // bottom-left
-	 -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f, // top-right
-	 -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f, // bottom-right
-	 
-	 -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f, // top-left
-	  1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f, // top-right
-	  1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f, // bottom-right                 
-	  1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f, // bottom-right
-	 -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f, // bottom-left  
-	 -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f  // top-left              
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+
+	-1.0f, -1.0f,  1.0f,
+	-1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f, -1.0f,  1.0f,
+	-1.0f, -1.0f,  1.0f,
+
+	-1.0f,  1.0f, -1.0f,
+	 1.0f,  1.0f, -1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	-1.0f,  1.0f,  1.0f,
+	-1.0f,  1.0f, -1.0f,
+
+	-1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f,  1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f,  1.0f,
+	 1.0f, -1.0f,  1.0f
 };
 
 float vertices2[] = {
@@ -168,6 +168,15 @@ glm::vec3 pointLightPositions[] = {
 	glm::vec3(0.0f, 0.0f, -3.0f)
 };
 
+float points[] = {
+	-0.5f,
+0.5f, 1.0f, 0.0f, 0.0f, // top-left
+0.5f,
+0.5f, 0.0f, 1.0f, 0.0f, // top-right
+0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // bottom-right
+-0.5f, -0.5f, 1.0f, 1.0f, 0.0f
+// bottom-left
+};
 
 //****************************************************************************************************************************************
 int main() {
@@ -302,10 +311,10 @@ int main() {
 	textures_faces.push_back(R"(textures/skybox/left.jpg)");
 	textures_faces.push_back(R"(textures/skybox/top.jpg)");
 	textures_faces.push_back(R"(textures/skybox/bottom.jpg)");
-	textures_faces.push_back(R"(textures/skybox/back.jpg)");
 	textures_faces.push_back(R"(textures/skybox/front.jpg)");
-
+	textures_faces.push_back(R"(textures/skybox/back.jpg)");
 	unsigned int skyboxTexture = loadCubemap(textures_faces);
+
 
 	Shader skyboxShader(R"(shaders\skybox.vert)", R"(shaders\skybox.frag)");
 
@@ -315,9 +324,9 @@ int main() {
 	glBindVertexArray(skyboxVAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
 	//VertexPos Attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
 
@@ -325,62 +334,143 @@ int main() {
 	//***********************************************************************************************
 	Shader lightingShader(R"(shaders\lightingShader.vert)", R"(shaders\lightingShader.frag)");
 	lightingShader.use();
-	//setting the material and light (temp?)
 	lightingShader.setFloat("material.shininess", 32.0f);
 
-	//temp box shader
-	Shader boxShader(R"(shaders\lightingShader.vert)", R"(shaders\temp.frag)");
+	//temp box shader(cleaner yippeee)
+	Shader boxShader(R"(shaders\temp.vert)", R"(shaders\temp.frag)", R"(shaders\basicGeometryShader.geo)");
+	Shader lightSourceShader(R"(shaders\lightSourceShader.vert)", R"(shaders\lightSourceShader.frag)");
+
+	Shader basicTextureShader(R"(shaders\basicTexture.vert)", R"(shaders\basicTexture.frag)");
+	Shader instanceShader(R"(shaders\instanceShader.vert)", R"(shaders\instanceShader.frag)");
+	Shader starInstanceShader(R"(shaders\starInstanceShader.vert)", R"(shaders\starInstanceShader.frag)");
+
+	Model backpack("models/backpack/backpack.obj");
+	Model planet("models/planet/planet.obj");
+	Model rock("models/rock/rock.obj");
+	Model star("models/star/octahedron.obj");
 	//***********************************************************************************************
-	MTexture diffuseMap(GL_TEXTURE_2D, "textures/container.jpg", true, 0);
-	MTexture specularMap(GL_TEXTURE_2D, "textures/container2_specular.png", true, 1);
+	//Aesteorids and stars!
 
-	//GRASS no more
-	unsigned int grassVAO, grassVBO;
-	glGenVertexArrays(1, &grassVAO);
-	glGenBuffers(1, &grassVBO);
-	glBindVertexArray(grassVAO);
+	//setting up new random style
+	std::random_device rdSeed; //random device, seed gen
+	std::mt19937 gen(rdSeed()); // random engine, mersenne twister
 
-	glBindBuffer(GL_ARRAY_BUFFER, grassVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
-	
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);//VertexPos Attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);//normal attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);//texture attribute
+	unsigned int amount = 1000;
+	glm::mat4* modelMatrices;
+	modelMatrices = new glm::mat4[amount];
+	srand(glfwGetTime()); //make a random seed
+	float radius = 50.0;
+	float offset = 2.5f;
 
-	vector<glm::vec3> windows;
-	windows.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
-	windows.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
-	windows.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
-	windows.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
-	windows.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
+	for (unsigned int i = 0; i < amount; i++) 
+	{
+		glm::mat4 model = glm::mat4(1.0);
 
-	std::map<float, glm::vec3> sorted;
-	for (unsigned int i = 0; i < windows.size(); i++) {
+		//putting aesteroids in the ring
+		float angle = ((float)i / (float)amount) * 360.0f;
+		float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
 
-		float distance = glm::length(camera.Position - windows[i]);
-		sorted[distance] = windows[i];
+
+		float x = sin(angle) * radius + displacement;
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float y = displacement * 0.4f;
+		displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+		float z = cos(angle) * radius + displacement;
+
+		model = glm::translate(model, glm::vec3(x,y,z));
+
+		//give a random scaling(0.05 - 0.25)
+		float scale = ((rand() % 20) / 100.0f) + 0.05f;
+		model = glm::scale(model, glm::vec3(scale));
+
+		//give a random rotation
+		float rotAngle = (rand() % 360);
+		model = glm::rotate(model, glm::radians(rotAngle), glm::vec3(0.4f, 0.6f, 0.8f));
+
+		//populating the array
+		modelMatrices[i] = model;
+
 	}
 
-	Shader tempGrassShader(R"(shaders/lightingShader.vert)", R"(shaders/temp.frag)");
+
+	std::uniform_real_distribution<float> disTheta(0.0f, 2.0f * PI);
+	std::uniform_real_distribution<float> disZ(-1.0f, 1.0f);
+	std::uniform_real_distribution<float> disScale(0.1f, 0.4f);
+
+	unsigned int starAmount = 3000;
+	float starRadius = 150.0f;
+	glm::mat4* starModelMatrices;
+	starModelMatrices = new glm::mat4[starAmount];
+
+	//to generated random sphere coordinates
+	//surface area of sphere = LSA of cylinder, so we just do that(2piRh)
+
+	for (unsigned int i = 0; i < starAmount; i++)
+	{
+		float theta = disTheta(gen);
+		float z = disZ(gen);
+		float scale = disScale(gen);
+
+		//getting a uniform direction on a unit sphere
+
+		float r_xy = std::sqrt(1.0f - z * z);
+		float x = (r_xy * cos(theta)); 
+		float y = (r_xy * sin(theta));
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(x * starRadius, y * starRadius, z * starRadius));
+		model = glm::scale(model, glm::vec3(scale));
+		model = glm::rotate(model, glm::radians(theta), glm::vec3(0.4f, 0.6f, 0.8f));
+
+		starModelMatrices[i] = model;
+	}
+
+	glm::vec3 starColor = (glm::vec3(206.0f, 224.0f, 244.0f) / 255.0f);
+
+	starInstanceShader.use();
+	starInstanceShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+	starInstanceShader.setVec3("dirLight.ambient", starColor * 0.7f);
+	starInstanceShader.setVec3("dirLight.diffuse", starColor);
+	starInstanceShader.setVec3("dirLight.specular", starColor);
+	starInstanceShader.setVec3("viewPos", camera.Position);
+	
+
+	//***********************************************************************************************
+	//bloom implementation(for later)
+
+	/*struct BloomMip {
+		glm::ivec2 size;
+		unsigned int texture;
+	};
+
+	vector<BloomMip> bloomMips;
+	glm::ivec2 mipSize(width, height);
+
+	unsigned int bloomFBO;
+	glGenBuffers(1, &bloomFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
+
+	for (unsigned int i = 0; i < 3; i++) {
+
+
+	}*/
+
+	//***********************************************************************************************
+
+	rock.setupInstanceBuffer(amount, modelMatrices);
+	star.setupInstanceBuffer(starAmount, starModelMatrices);
+	glm::mat4 rotation = glm::mat4(1.0f);
+	glm::mat4 rotationX = glm::mat4(1.0f);
+	rotationX = glm::rotate(rotationX, glm::radians(22.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+	//***********************************************************************************************
+	
 
 
 	MTexture grassTex(GL_TEXTURE_2D, "textures/metal.png", true, 0);
 	MTexture playerTex(GL_TEXTURE_2D, "textures/LR.png", true, 0);
 	MTexture asciiTex(GL_TEXTURE_2D, "textures/8x8.png", true, 0);
 	mtWrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-
-	tempGrassShader.use();
-	tempGrassShader.setInt("material.texture_diffuse1", 0);
-
-	//***********************************************************************************************
-	Shader lightSourceShader(R"(shaders\lightSourceShader.vert)", R"(shaders\lightSourceShader.frag)");
-	Shader outlineShader(R"(shaders/lightingShader.vert)", R"(shaders/temp.frag)");
-
-	//loading models
-	Model backpack("models/backpack/backpack.obj");
 
 	//***********************************************************************************************
 
@@ -399,100 +489,56 @@ int main() {
 		lastFrame = currentTime;
 		processInput(window);
 
-		//RE SIZEEEEEEEEEE
-		glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glBindRenderbuffer(GL_RENDERBUFFER, RBO);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
 		//matrices
 		glm::mat4 model = glm::mat4(1.0f);
-		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)width/(float)height, 0.1f, 100.0f);
-		glm::mat4 view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)width/(float)height, 0.1f, 150.0f);
+		glm::mat4 view = camera.GetViewMatrix();
+		
 
-		//first pass(off screen)
-		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		//first pass bruh
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
 
-		//skybox
-		glDisable(GL_CULL_FACE);
-		glDepthMask(GL_FALSE);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(4.0f));
+		basicTextureShader.use();
+		basicTextureShader.setMat4("model",model);
+		basicTextureShader.setMat4("rotation",rotation);
+		basicTextureShader.setMat4("view",view);
+		basicTextureShader.setMat4("projection", projection);
+		planet.Draw(basicTextureShader);
+
+		instanceShader.use();
+		rotation = glm::rotate(rotation, glm::radians(3.0f * deltaTime), glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)));
+		instanceShader.setMat4("view", view);
+		instanceShader.setMat4("projection", projection);
+		instanceShader.setMat4("rotation", rotation);
+		instanceShader.setMat4("rotationX", rotationX);
+		rock.DrawInstanced(instanceShader);
+
 		glDepthFunc(GL_LEQUAL);
-		skyboxShader.use();
-		skyboxShader.setMat4("projection", projection);
-		skyboxShader.setMat4("view", view);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
-		skyboxShader.setInt("skybox", 0);
-		glBindVertexArray(skyboxVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glDepthMask(GL_TRUE);
-		glEnable(GL_CULL_FACE);
+		starInstanceShader.use();
+		view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+		starInstanceShader.setMat4("view", view);
+		starInstanceShader.setMat4("projection", projection);
+		star.DrawInstanced(starInstanceShader);
 		glDepthFunc(GL_LESS);
-		view = camera.GetViewMatrix();
-
-
-		//floor
-		glEnable(GL_CULL_FACE);
-		glFrontFace(GL_CCW);
-		glBindVertexArray(grassVAO);
-		glActiveTexture(GL_TEXTURE0);
-		model = glm::mat4(1.0f);
-		glBindTexture(GL_TEXTURE_2D, grassTex.ID);
-		model = glm::translate(model, glm::vec3(0.0f, -0.501f, 0.0f));
-		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(10.0f, 10.0f, 0.0f));
-		tempGrassShader.use();
-		tempGrassShader.setInt("material_diffuse1", 0);
-		tempGrassShader.setMat4("model",model);
-		tempGrassShader.setMat4("view",view);
-		tempGrassShader.setMat4("projection",projection);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-
-		//cube
-		glEnable(GL_CULL_FACE);
-		glFrontFace(GL_CW);
-		glEnable(GL_DEPTH_TEST);
-		glBindVertexArray(VAO);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, diffuseMap.ID);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-		boxShader.use();
-		boxShader.setInt("material_diffuse1", 0);
-		boxShader.setInt("material_specular1", 0);
-		boxShader.setMat4("model",model);
-		boxShader.setMat4("view",view);
-		boxShader.setMat4("projection",projection);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-		boxShader.setMat4("model", model);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		//second pass
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		/*glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_CULL_FACE);
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		//screen quad
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glBindVertexArray(quadVAO);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texColorBuffer);
 		screenShader.use();
 		screenShader.setInt("screenTexture", 0);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, asciiTex.ID);
-		screenShader.setInt("asciiMap", 1);
-		screenShader.setFloat("width", width);
-		screenShader.setFloat("height", height);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDrawArrays(GL_TRIANGLES, 0, 6);*/
+
 
 		//unbind stuff 
 		glBindVertexArray(0);
@@ -582,6 +628,14 @@ void processInput(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
 		camera.ProcessKeyboard(DOWN, deltaTime);
 	}
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+		camera.MovementSpeed = 15.0f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS) {
+		camera.MovementSpeed = 5.0f;
+	}
+	
+	
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int fwidth, int fheight) {
@@ -592,7 +646,7 @@ void framebuffer_size_callback(GLFWwindow* window, int fwidth, int fheight) {
 }
 
 //EWWW function
-void outlineModel(Model model, Shader defShader, glm::vec3 position) {
+/*void outlineModel(Model model, Shader defShader, glm::vec3 position) {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_STENCIL_TEST);
 
@@ -628,7 +682,7 @@ void outlineModel(Model model, Shader defShader, glm::vec3 position) {
 	glDisable(GL_DEPTH_TEST);
 	glStencilMask(0xFF);
 
-}
+}*/
 
 void toggleMouse(GLFWwindow* window) {
 	if (cursorEnabled == true) {
@@ -658,34 +712,36 @@ void uiDraw() {
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-unsigned int loadCubemap(vector<string> faces) {
+unsigned int loadCubemap(vector<std::string> faces)
+{
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
-	int width, height, nrChannels;
-	unsigned char* data;
-	for (unsigned int i = 0; i < faces.size(); i++) {
-		data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+	stbi_set_flip_vertically_on_load(false);
 
-		if (data) 
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
 		{
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 			stbi_image_free(data);
 		}
-		else {
-			cout << "ERROR::CUBEMAP::FAILED TO LOAD IMAGE" << endl;
+		else
+		{
+			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
 			stbi_image_free(data);
 		}
-
 	}
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	
 
+	stbi_set_flip_vertically_on_load(true);
 
 	return textureID;
 }

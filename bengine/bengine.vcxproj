@@ -31,6 +31,11 @@
     <ClCompile Include="main\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\basicGeometryShader.geo" />
+    <None Include="shaders\basicTexture.frag" />
+    <None Include="shaders\basicTexture.vert" />
+    <None Include="shaders\instanceShader.frag" />
+    <None Include="shaders\instanceShader.vert" />
     <None Include="shaders\lab.frag" />
     <None Include="shaders\lab.vert" />
     <None Include="shaders\lightSourceShader.vert" />
@@ -39,6 +44,8 @@
     <None Include="shaders\lightSourceShader.frag" />
     <None Include="shaders\skybox.frag" />
     <None Include="shaders\skybox.vert" />
+    <None Include="shaders\starInstanceShader.frag" />
+    <None Include="shaders\starInstanceShader.vert" />
     <None Include="shaders\temp.frag" />
     <None Include="shaders\temp.vert" />
   </ItemGroup>
@@ -106,6 +113,9 @@
     <IncludePath>$(ProjectDir)external\openglLibs\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)external\openglLibs\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(ProjectDir)headers;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -161,11 +171,22 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)external\openglLibs\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(ProjectDir)external\openglLibs\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(ProjectDir)external\openglLibs\lib\assimp-vc145-mt.lib;$(ProjectDir)external\openglLibs\lib\glfw3.lib;$(ProjectDir)external\openglLibs\lib\OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /E /I /Y "$(ProjectDir)shaders" "$(OutDir)shaders\"
+  
+xcopy /E /I /Y "$(ProjectDir)models" "$(OutDir)models\"
+  
+xcopy /E /I /Y "$(ProjectDir)textures" "$(OutDir)textures\"
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

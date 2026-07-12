@@ -41,6 +41,9 @@ struct Texture { // OH GOD
 //class? REVISE THE WHOLE OF MODEL LOADING
 class Mesh {
 public:
+	//render data
+	unsigned int VAO, VBO, EBO;
+
 	//mesh data
 	vector<Vertex> vertices;
 	vector<unsigned int> indices;
@@ -62,7 +65,7 @@ public:
 		//shader.use(); //controversial lol
 		for (unsigned int i = 0; i < textures.size(); i++)
 		{
-			
+
 			glActiveTexture(GL_TEXTURE0 + i);
 
 			string number;
@@ -82,11 +85,37 @@ public:
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 	}
+	void DrawInstanced(Shader& shader, unsigned int instancesNr)
+	{
+		unsigned int diffuseNr = 1;
+		unsigned int specularNr = 1;
+		//shader.use(); //controversial lol
+		for (unsigned int i = 0; i < textures.size(); i++)
+		{
+
+			glActiveTexture(GL_TEXTURE0 + i);
+
+			string number;
+			string name = textures[i].type;
+
+			if (name == "texture_diffuse")  number = std::to_string(diffuseNr++);
+			else if (name == "texture_specular") number = std::to_string(specularNr++);
+
+			shader.setInt(("material." + name + number).c_str(), i);
+			glBindTexture(GL_TEXTURE_2D, textures[i].id);
+
+		}
+		glActiveTexture(GL_TEXTURE0);
+
+		//Draw mesh
+		glBindVertexArray(VAO);
+		glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, instancesNr);
+		glBindVertexArray(0);
+	}
 
 private:
-	//render data
 
-	unsigned int VAO, VBO, EBO;
+
 	void setUpMesh()
 	{
 		glGenVertexArrays(1, &VAO);
@@ -117,6 +146,13 @@ private:
 
 class Model {
 public:
+
+	//model data
+	vector<Mesh> meshes;
+	vector<Texture> textures_loaded;
+	string directory;
+	unsigned int InstancesNr;
+
 	Model(const char* path)
 	{
 		loadModel(path);
@@ -129,11 +165,55 @@ public:
 		}
 	}
 
+	void setupInstanceBuffer(unsigned int instancesNr, glm::mat4* modelMatrices) {
+
+		InstancesNr = instancesNr;
+
+		//vertex buffer object boo
+		unsigned int buffer;
+		glGenBuffers(1, &buffer);
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glBufferData(GL_ARRAY_BUFFER, instancesNr * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW); //try to simplify
+
+		delete[] modelMatrices;
+
+		for (unsigned int i = 0; i < meshes.size(); i++)
+		{
+			unsigned int VAO = meshes[i].VAO;
+			glBindVertexArray(VAO);
+			//vertex attributes
+			std::size_t v4s = sizeof(glm::vec4);
+			glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * v4s, (void*)0);
+			glEnableVertexAttribArray(3);
+			glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * v4s, (void*)(1 * v4s));
+			glEnableVertexAttribArray(4);
+			glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * v4s, (void*)(2 * v4s));
+			glEnableVertexAttribArray(5);
+			glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * v4s, (void*)(3 * v4s));
+			glEnableVertexAttribArray(6);
+
+			glVertexAttribDivisor(3, 1);
+			glVertexAttribDivisor(4, 1);
+			glVertexAttribDivisor(5, 1);
+			glVertexAttribDivisor(6, 1);
+
+			glBindVertexArray(0);
+
+		}
+	}
+
+	void DrawInstanced(Shader& shader) {
+
+
+		for (unsigned int i = 0; i < meshes.size(); i++) {
+
+			meshes[i].DrawInstanced(shader, InstancesNr);
+		}
+	}
+
+
 private:
-	//model data
-	vector<Mesh> meshes;
-	vector<Texture> textures_loaded;
-	string directory;
+
 
 
 
@@ -222,18 +302,31 @@ private:
 	}
 
 	vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName) {
-		
+
 		stbi_set_flip_vertically_on_load(true);
 		vector<Texture> textures;
 
-		for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
+		unsigned int texCount = mat->GetTextureCount(type);
+
+		if (texCount == 0)  cout << "WARNING::MODEL(" << directory << ")::TEXTURES::no textures of type " << typeName << " were found for this model" << endl;
+
+		if (type == 1 and texCount == 0) {
+			Texture texture;
+			texture.id = TextureFromFile("error.png", "textures");
+			texture.type = "texture_diffuse";
+			texture.path = "textures/error.png";
+			textures.push_back(texture);
+			textures_loaded.push_back(texture);
+		}
+
+		for (unsigned int i = 0; i < texCount; i++) {
 
 			aiString str;
 			mat->GetTexture(type, i, &str);
 			bool skip = false;
 
 			for (unsigned int j = 0; j < textures_loaded.size(); j++) {
-				if(std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0)
+				if (std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0)
 				{
 					textures.push_back(textures_loaded[j]);
 					skip = true;
