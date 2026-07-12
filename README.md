@@ -13,26 +13,27 @@ Get around the scene using the following keyboard and mouse configurations:
 | **W, A, S, D** | Move the camera Forward, Left, Backward, and Right |
 | **Mouse Move** | Look around / Rotate camera orientation |
 | **Mouse Scroll** | Zoom in and out/ change the FOV |
-| **Left Shift** | Move vertically downwards |
-| **Escape / Tab** | Toggle mouse cursor unlock / Lock to screen |
+| **E / Q** | Move vertically downwards / upwards |
+| **Escape** | Close program |
+| **Left Alt** | Toggle mouse cursor unlock / Lock to screen |
 
 ---
 
 ## What I Learnt
 here is a list of what I learnt about:
-*OpenGL
-*buffers
-*shaders - vertex, geometry, fragment
-*linear algebra in computer graphics
-*phong lighting model
-*instanced rendering
-*post processing
+* OpenGL
+* buffers
+* shaders - vertex, geometry, fragment
+* linear algebra in computer graphics
+* phong lighting model
+* instanced rendering
+* post processing
 
 ---
 
 ## Gallery
 
-Here is a look at **bengine** in action! 
+Images of renders I happen to take along the way
 
 ### First render
 ![an indexed rectangle](Gallery/first.png)
@@ -44,6 +45,7 @@ Here is a look at **bengine** in action!
 
 ### Going 3D
 ![a cube](Gallery/going3D.png)
+
 *Image 3: going a dimension deeper*
 
 ### let there be light
@@ -56,11 +58,11 @@ Here is a look at **bengine** in action!
 
 ### Framebuffer Mirror
 ![mirror](Gallery/mirror.png)
-*Image 7: A mirror but no face.*
+*Image 6: A mirror but no face.*
 
 ### Instanced Star and rocks System
 ![Instanced Starfield Demo](Gallery/instance.png)
-*Image 8: Thousands of generated stars rendered in real-time utilizing instanced arrays.*
+*Image 7: Thousands of generated stars rendered in real-time utilizing instanced arrays.*
 
 ---
 
