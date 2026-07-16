@@ -3,6 +3,7 @@
 #include <iostream>
 #include <map>
 #include <random>
+#include <memory>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -11,12 +12,19 @@
 #include "shader.h"
 #include "stb_image.h"
 #include "my_texture.h"
+#include "my_UI.h"
 #include "model.h"
 #include "camera.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+
+#include <soloud/soloud.h>
+#include <soloud/soloud_wav.h>
+
+SoLoud::Soloud soloud; //audio engine
+SoLoud::Wav sample;     //one wave file
 
 constexpr float PI = 3.1415926535f;
 using std::cout, std::endl, std::string, std::vector;
@@ -29,6 +37,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+
 float lastX = width / 2.0f;
 float lastY = height / 2.0f;
 bool firstMouse = true;
@@ -40,62 +49,17 @@ void processInput(GLFWwindow* window);
 
 void framebuffer_size_callback(GLFWwindow* window, int fwidth, int fheight);
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void toggleMouse(GLFWwindow* window);
 
-
 void uiDefine(ImGuiIO io);
 void uiDraw();
+void uiRefresh();
+void uiClickCheck();
 
 unsigned int loadCubemap(vector<string> faces);
-
-
-float vertices[] = {
-	// positions          // normals           // texture coords
-	// back face
-	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f, // bottom-left
-	 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f, // bottom-right    
-	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f, // top-right             
-	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f, // top-right
-	-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f, // top-left
-	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f, // bottom-left                
-	// front face
-	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f, // bottom-left
-	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f, // top-right
-	 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 0.0f, // bottom-right        
-	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f, // top-right
-	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f, // bottom-left
-	-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f, // top-left        
-	// left face
-	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-right
-	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-left
-	-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f, // top-left       
-	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-left
-	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-right
-	-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f, // bottom-right
-	// right face
-	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-left
-	 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, // top-right      
-	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-right          
-	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f, // bottom-right
-	 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f, // bottom-left
-	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, // top-left
-	 // bottom face          
-	 -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f, // top-right
-	  0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f, // bottom-left
-	  0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f, // top-left        
-	  0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f, // bottom-left
-	 -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f, // top-right
-	 -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f, // bottom-right
-	 // top face
-	 -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f, // top-left
-	  0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f, // top-right
-	  0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f, // bottom-right                 
-	  0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f, // bottom-right
-	 -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f, // bottom-left  
-	 -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f  // top-left              
-};
 
 float skyboxVertices[] = {
 	// positions          
@@ -142,15 +106,6 @@ float skyboxVertices[] = {
 	 1.0f, -1.0f,  1.0f
 };
 
-float vertices2[] = {
-	-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-	 0.5f, -0.5f, 0.0f,  0.0f, 0.0f, -1.0f, 1.0f, 0.0f,
-	 0.5f,  0.5f, 0.0f,  0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
-	 0.5f,  0.5f, 0.0f,  0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
-	-0.5f,  0.5f, 0.0f,  0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
-	-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-};
-
 float quadVertices[] = {
 	// positions	// texCoords
 	-1.0f,  1.0f,	0.0f, 1.0f,	
@@ -161,12 +116,6 @@ float quadVertices[] = {
 	 1.0f,  1.0f,	1.0f, 1.0f
 };
 
-glm::vec3 pointLightPositions[] = {
-	glm::vec3(0.7f, 0.2f,  2.0f),
-	glm::vec3(2.3f, -3.3f, -4.0f),
-	glm::vec3(-4.0f, 2.0f, -12.0f),
-	glm::vec3(0.0f, 0.0f, -3.0f)
-};
 
 float points[] = {
 	-0.5f,
@@ -177,6 +126,9 @@ float points[] = {
 -0.5f, -0.5f, 1.0f, 1.0f, 0.0f
 // bottom-left
 };
+
+//UI ELEMENTS
+std::unique_ptr<UI> cross_button;
 
 //****************************************************************************************************************************************
 int main() {
@@ -218,9 +170,16 @@ int main() {
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
+	//setting up soloud(audio)
+	soloud.init();
+	sample.load("audio\\LOOP1.wav");
+	sample.setLooping(true);
+	sample.setVolume(0.25f);
+
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glEnable(GL_DEPTH_TEST);
@@ -234,24 +193,7 @@ int main() {
 
 	camera.SetCameraMode(FLY);
 
-	//cube VAO, VBO
-	unsigned int VAO, VBO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glBindVertexArray(VAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	//VertexPos Attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	//normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	//texture attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
 
 
 	//***********************************************************************************************
@@ -296,6 +238,7 @@ int main() {
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
 	
 	Shader screenShader(R"(shaders/lab.vert)", R"(shaders/lab.frag)");
+	Shader buttonShader(R"(shaders/lab.vert)", R"(shaders/lab.frag)");
 
 	//to be executed last
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -434,6 +377,23 @@ int main() {
 	starInstanceShader.setVec3("dirLight.specular", starColor);
 	starInstanceShader.setVec3("viewPos", camera.Position);
 	
+	//***********************************************************************************************
+
+	//temp
+	MTexture grassTex(GL_TEXTURE_2D, "textures/metal.png", true, 0);
+	MTexture playerTex(GL_TEXTURE_2D, "textures/LR.png", true, 0);
+	MTexture asciiTex(GL_TEXTURE_2D, "textures/8x8.png", true, 0);
+	mtWrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+	//making the UI
+	cross_button =  std::make_unique<UI>(quadVAO, buttonShader, [window]() {glfwSetWindowShouldClose(window, true); });
+	
+	cross_button->convertPosition(false);
+	cout << cross_button->width << "," << cross_button->height;
+	cross_button->SetPosition(width - cross_button->width/ 2, height - cross_button->height / 2, false);
+	cross_button->SetDimensions(0.1f, 0.1f);
+	cross_button->SetTexture("textures/cross.png");
+	//cout << width - cross_button->width / 2 << "," << height - cross_button->height / 2 << endl;
 
 	//***********************************************************************************************
 	//bloom implementation(for later)
@@ -464,20 +424,15 @@ int main() {
 	rotationX = glm::rotate(rotationX, glm::radians(22.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
 	//***********************************************************************************************
-	
-
-
-	MTexture grassTex(GL_TEXTURE_2D, "textures/metal.png", true, 0);
-	MTexture playerTex(GL_TEXTURE_2D, "textures/LR.png", true, 0);
-	MTexture asciiTex(GL_TEXTURE_2D, "textures/8x8.png", true, 0);
-	mtWrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-
-	//***********************************************************************************************
 
 	//unbind all the stuff
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	glLinkProgram(0);
+
+	//start stuff
+	soloud.play(sample);
+	camera.Position = glm::vec3(0.0f, -20.0f, 100.0f);
 
 	//######################################################################################################
 	//render loop
@@ -487,6 +442,8 @@ int main() {
 		float currentTime = (float)glfwGetTime();
 		deltaTime = currentTime - lastFrame;
 		lastFrame = currentTime;
+
+		uiClickCheck();
 		processInput(window);
 
 		//matrices
@@ -556,9 +513,7 @@ int main() {
 	}
 //######################################################################################################
 
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
-	glDeleteProgram(lightingShader.ID);
+	soloud.deinit();
 
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
@@ -589,8 +544,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
-	if (cursorEnabled == false) 
-	{
+
 		float xpos = static_cast<float>(xposIn);
 		float ypos = static_cast<float>(yposIn);
 
@@ -605,8 +559,13 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
 		lastX = xpos;
 		lastY = ypos;
 
+		clickPosX = xpos;
+		clickPosY = ypos;
+
+		if (cursorEnabled == false)
+		{
 		camera.ProcessMouseMovement(xoffset, yoffset, deltaTime);
-	}
+		}
 }
 
 void processInput(GLFWwindow* window) {
@@ -640,9 +599,111 @@ void processInput(GLFWwindow* window) {
 
 void framebuffer_size_callback(GLFWwindow* window, int fwidth, int fheight) {
 	glViewport(0, 0, fwidth, fheight);
+	if (fwidth == 0 || fheight == 0) {
+		return;
+	}
 
 	width = fwidth;
 	height = fheight;
+
+	screenWidth = fwidth;
+	screenHeight = fheight;
+
+	uiRefresh();
+
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+	if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS && cursorEnabled == true) 
+	{
+		mouseClicked = true;
+		//cout << lastX - width/2 << "," <<height/2 - lastY<< endl;
+
+
+	}
+	else {
+		mouseClicked = false;
+	}
+}
+
+void toggleMouse(GLFWwindow* window) {
+	if (cursorEnabled == true) {
+		cursorEnabled = false;
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
+	else {
+		cursorEnabled = true;
+		firstMouse = true;
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+}
+
+void uiDefine(ImGuiIO io) {
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	{
+		ImGui::Begin("Pending Panel");
+		ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+		ImGui::End();
+	}
+}
+
+void uiDraw() {
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+	for (unsigned int i = 0; i < ui_elements.size(); i++) {
+		ui_elements[i]->DrawButton();
+	}
+}
+
+void uiRefresh() {
+
+	for (unsigned int i = 0; i < ui_elements.size(); i++) {
+		ui_elements[i]->RefreshVars();
+	}
+
+}
+
+void uiClickCheck() {
+	for (unsigned int i = 0; i < ui_elements.size(); i++) {
+		ui_elements[i]->CheckForCLick();
+	}
+}
+
+unsigned int loadCubemap(vector<std::string> faces)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	stbi_set_flip_vertically_on_load(false);
+
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	stbi_set_flip_vertically_on_load(true);
+
+	return textureID;
 }
 
 //EWWW function
@@ -683,65 +744,3 @@ void framebuffer_size_callback(GLFWwindow* window, int fwidth, int fheight) {
 	glStencilMask(0xFF);
 
 }*/
-
-void toggleMouse(GLFWwindow* window) {
-	if (cursorEnabled == true) {
-		cursorEnabled = false;
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	}
-	else {
-		cursorEnabled = true;
-		firstMouse = true;
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-	}
-}
-
-void uiDefine(ImGuiIO io) {
-	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplGlfw_NewFrame();
-	ImGui::NewFrame();
-	{
-		ImGui::Begin("Pending Panel");
-		ImGui::Text("Application Average: %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-		ImGui::End();
-	}
-}
-
-void uiDraw() {
-	ImGui::Render();
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-unsigned int loadCubemap(vector<std::string> faces)
-{
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-
-	stbi_set_flip_vertically_on_load(false);
-
-	int width, height, nrChannels;
-	for (unsigned int i = 0; i < faces.size(); i++)
-	{
-		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-		if (data)
-		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-			stbi_image_free(data);
-		}
-		else
-		{
-			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
-			stbi_image_free(data);
-		}
-	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-	stbi_set_flip_vertically_on_load(true);
-
-	return textureID;
-}

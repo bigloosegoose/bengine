@@ -29,6 +29,30 @@
     <ClCompile Include="main\imgui\imgui_tables.cpp" />
     <ClCompile Include="main\imgui\imgui_widgets.cpp" />
     <ClCompile Include="main\main.cpp" />
+    <ClCompile Include="main\soloud\core\soloud.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_audiosource.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_bus.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_core_3d.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_core_basicops.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_core_faderops.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_core_filterops.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_core_getters.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_core_setters.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_core_voicegroup.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_core_voiceops.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_fader.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_fft.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_fft_lut.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_file.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_filter.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_misc.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_queue.cpp" />
+    <ClCompile Include="main\soloud\core\soloud_thread.cpp" />
+    <ClCompile Include="main\soloud\wasapi\soloud_wasapi.cpp" />
+    <ClCompile Include="main\soloud\wav\dr_impl.cpp" />
+    <ClCompile Include="main\soloud\wav\soloud_wav.cpp" />
+    <ClCompile Include="main\soloud\wav\soloud_wavstream.cpp" />
+    <ClCompile Include="main\soloud\wav\stb_vorbis.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\basicGeometryShader.geo" />
@@ -53,9 +77,17 @@
     <ClInclude Include="headers\camera.h" />
     <ClInclude Include="headers\model.h" />
     <ClInclude Include="headers\my_texture.h" />
+    <ClInclude Include="headers\my_UI.h" />
     <ClInclude Include="headers\scene.h" />
     <ClInclude Include="headers\shader.h" />
     <ClInclude Include="headers\stb_image.h" />
+    <ClInclude Include="main\soloud\wav\dr_flac.h" />
+    <ClInclude Include="main\soloud\wav\dr_mp3.h" />
+    <ClInclude Include="main\soloud\wav\dr_wav.h" />
+    <ClInclude Include="main\soloud\wav\stb_vorbis.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="audio\test.wav" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
@@ -169,10 +201,10 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WITH_WASAPI;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\openglLibs\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external\openglLibs\include\soloud;$(ProjectDir)external\openglLibs\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -181,14 +213,16 @@
       <AdditionalDependencies>$(ProjectDir)external\openglLibs\lib\assimp-vc145-mt.lib;$(ProjectDir)external\openglLibs\lib\glfw3.lib;$(ProjectDir)external\openglLibs\lib\OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-  <Command>xcopy /E /I /Y "$(ProjectDir)shaders" "$(OutDir)shaders\"
+      <Command>xcopy /E /I /Y "$(ProjectDir)shaders" "$(OutDir)shaders\"
 
 xcopy /E /I /Y "$(ProjectDir)models" "$(OutDir)models\"
 
 xcopy /E /I /Y "$(ProjectDir)textures" "$(OutDir)textures\"
 
+xcopy /E /I /Y "$(ProjectDir)audio" "$(OutDir)audio\"
+
 xcopy /D /Y "$(SolutionDir)dlls\*.dll" "$(OutDir)"</Command>
-</PostBuildEvent>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -235,6 +235,7 @@ public:
 		glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));  //uniform loc, no of matrices, no transpose, OpenGl friendly -> value_ptr(mat data)
 	}
 
+	//VEC3s
 	void setVec3(const std::string& name, glm::vec3 vector)const {
 		glUniform3f(glGetUniformLocation(ID, name.c_str()), vector.x, vector.y, vector.z);
 	}
@@ -243,5 +244,10 @@ public:
 	}
 	void setVec3(const std::string& name, float value)const {
 		glUniform3f(glGetUniformLocation(ID, name.c_str()), value, value, value);
+	}
+
+	//VEC4s
+	void setVec4(const std::string& name, glm::vec4 vector)const {
+		glUniform4f(glGetUniformLocation(ID, name.c_str()), vector.x, vector.y, vector.z, vector.w);
 	}
 };
